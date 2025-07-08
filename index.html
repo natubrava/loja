@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NatuBrava Produtos Naturais - Catálogo Online</title>
+  <meta name="description" content="NatuBrava Produtos Naturais oferece alimentos funcionais, suplementos, chás e cosméticos naturais na Praia Brava em Itajaí.">
+  <meta name="keywords" content="produtos naturais, suplementos, chás, cosméticos naturais, Itajaí, Praia Brava">
+  <meta name="author" content="NatuBrava Produtos Naturais">
+  
+  <!-- Preload crítico para performance -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style">
+  <link rel="preload" href="styles.css" as="style">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Preconnect para otimizar carregamento -->
+  <link rel="preconnect" href="https://res.cloudinary.com">
+  <link rel="preconnect" href="https://docs.google.com">
+  
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Carregamento otimizado dos ícones -->
+  <link rel="modulepreload" href="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js">
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <header class="bg-white shadow-md sticky top-0 z-50">
+    <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center" aria-label="Menu Principal">
+      <a href="#" class="flex items-center">
+        <img src="LOGOVERDE.png" alt="Logo da NatuBrava" class="h-10 sm:h-12 w-auto" loading="eager">
+      </a>
+      
+      <!-- Menu Desktop -->
+      <div class="hidden sm:flex items-center space-x-4">
+        <a href="#produtos" class="text-sm sm:text-base text-green-700 hover:text-green-900 font-medium">Produtos</a>
+        <a href="#sobre" class="text-sm sm:text-base text-green-700 hover:text-green-900 font-medium">Sobre</a>
+        <a href="#contato" class="text-sm sm:text-base text-green-700 hover:text-green-900 font-medium">Contato</a>
+        <button id="club-info-button" class="text-sm sm:text-base text-green-700 hover:text-green-900 font-medium transition-transform duration-200 hover:-translate-y-px flex items-center">
+          <ion-icon name="star-outline" class="mr-1 text-base"></ion-icon>Club NatuBrava
+        </button>
+        <button id="delivery-info-button" class="text-sm sm:text-base text-green-700 hover:text-green-900 font-medium transition-transform duration-200 hover:-translate-y-px">Entregas</button>
+      </div>
+      
+      <!-- Menu Mobile -->
+      <div class="flex sm:hidden items-center space-x-2">
+        <button id="mobile-menu-button" class="text-green-700 hover:text-green-900 p-2 rounded-full hover:bg-green-100 transition-transform duration-300" aria-label="Abrir Menu">
+          <ion-icon name="menu-outline" class="text-2xl"></ion-icon>
+        </button>
+        <button id="cart-button-mobile" class="relative text-green-700 hover:text-green-900 p-2 rounded-full hover:bg-green-100 transition-transform duration-300" aria-label="Abrir Carrinho">
+          <ion-icon name="cart-outline" class="text-2xl"></ion-icon>
+          <span id="cart-count-mobile" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">0</span>
+        </button>
+      </div>
+      
+      <!-- Carrinho Desktop -->
+      <div class="hidden sm:block">
+        <button id="cart-button" class="relative text-green-700 hover:text-green-900 p-2 rounded-full hover:bg-green-100 transition-transform duration-300" aria-label="Abrir Carrinho">
+          <ion-icon name="cart-outline" class="text-2xl"></ion-icon>
+          <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">0</span>
+        </button>
+      </div>
+    </nav>
+    
+    <!-- Menu Mobile Dropdown -->
+    <div id="mobile-menu" class="sm:hidden bg-white border-t border-gray-200 hidden">
+      <div class="px-4 py-3 space-y-3">
+        <a href="#produtos" class="block text-green-700 hover:text-green-900 font-medium py-2">📱 Produtos</a>
+        <a href="#sobre" class="block text-green-700 hover:text-green-900 font-medium py-2">ℹ️ Sobre</a>
+        <a href="#contato" class="block text-green-700 hover:text-green-900 font-medium py-2">📞 Contato</a>
+        <button id="club-info-button-mobile" class="block w-full text-left text-green-700 hover:text-green-900 font-medium py-2">⭐ Club NatuBrava</button>
+        <button id="delivery-info-button-mobile" class="block w-full text-left text-green-700 hover:text-green-900 font-medium py-2">🚚 Entregas</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="bg-gradient-to-r from-green-500 to-lime-400 text-white py-8 sm:py-10 px-6 text-center">
+      <h1 class="text-2xl sm:text-3xl font-bold mb-2">Nosso Catálogo Online</h1>
+      <p class="text-md md:text-lg mb-5">Explore nossos produtos e monte seu pedido para enviar via WhatsApp.</p>
+      <a href="#produtos" class="bg-white text-green-600 font-semibold py-2 px-6 rounded-full hover:bg-gray-100 transition duration-300 text-sm sm:text-base">Ver Produtos</a>
+    </section>
+
+    <div id="loading-status" class="container mx-auto px-4 py-8 text-center">
+      <div class="loading-spinner"></div>
+      <p class="mt-4 text-gray-600">Carregando produtos da planilha...</p>
+    </div>
+
+    <section id="produtos" class="container mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-12" style="display: none;">
+      <h2 class="text-2xl sm:text-3xl font-bold text-center text-green-800 mb-6">Nossos Produtos</h2>
+      
+      <div class="max-w-xl mx-auto mb-6">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <ion-icon name="search-outline" class="text-gray-400"></ion-icon>
+          </div>
+          <input type="search" id="search-box" placeholder="Buscar pelo nome do produto..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-green-500" autocomplete="off">
+        </div>
+      </div>
+
+      <div id="category-filters" class="gap-2 mb-8 pb-4"></div>
+      
+      <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"></div>
+      
+      <p id="no-products-message" class="text-center text-gray-500 col-span-full" style="display: none;">Nenhum produto encontrado.</p>
+    </section>
+
+    <section id="error-section" class="container mx-auto px-4 py-16 text-center" style="display: none;">
+      <div class="max-w-md mx-auto">
+        <div class="text-red-500 mb-4">
+          <ion-icon name="alert-circle-outline" class="text-6xl"></ion-icon>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Erro ao Carregar Produtos</h3>
+        <div id="error-details" class="text-gray-600 mb-6 text-sm bg-gray-100 p-4 rounded-lg"></div>
+        <button id="retry-button" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-300 font-medium">
+          <ion-icon name="refresh-outline" class="mr-2"></ion-icon>
+          Tentar Novamente
+        </button>
+      </div>
+    </section>
+
+    <section id="sobre" class="bg-white py-16 px-6">
+      <div class="container mx-auto text-center max-w-3xl">
+        <h2 class="text-2xl sm:text-3xl font-bold text-green-800 mb-6">Sobre a NatuBrava</h2>
+        <p class="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+          Na NatuBrava, você encontra saúde, bem-estar e qualidade de vida em um só lugar. Nossa loja fica na Praia Brava, em Itajaí – SC, e foi criada para oferecer praticidade com produtos naturais que fazem diferença no dia a dia.
+        </p>
+        <p class="text-base sm:text-lg text-gray-700 leading-relaxed mb-4">
+          Selecionamos com cuidado suplementos, chás, alimentos funcionais, snacks saudáveis, óleos essenciais, farinhas, encapsulados e muito mais — sempre com foco em resultado e confiança.
+        </p>
+        <p class="text-base sm:text-lg text-gray-700 leading-relaxed">
+          Você encontra variedade real, atendimento direto e soluções que cabem no seu estilo de vida. Faça uma visita ou chame no WhatsApp, será um prazer te atender!
+        </p>
+        <div class="mt-6">
+          <h3 class="text-xl font-semibold text-green-800 mb-2">Horário de Atendimento</h3>
+          <p class="text-gray-700">🕒 Segunda a Sexta: 9h às 19h</p>
+          <p class="text-gray-700">🕒 Sábados: 9h às 14h</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="contato" class="bg-green-50 py-16 px-6">
+      <div class="container mx-auto text-center max-w-3xl">
+        <h2 class="text-2xl sm:text-3xl font-bold text-green-800 mb-6">Entre em Contato</h2>
+        <p class="text-base sm:text-lg text-gray-700 mb-4">Visite nossa loja ou fale conosco pelo WhatsApp!</p>
+        <div class="mb-5">
+          <p class="text-lg font-medium text-green-700">📍 Endereço:</p>
+          <p class="text-gray-600">Av. Osvaldo Reis, 3547 – Praia Brava, Itajaí - SC</p>
+        </div>
+        <div class="mb-8">
+          <p class="text-lg font-medium text-green-700">📞 WhatsApp:</p>
+          <a href="https://wa.me/554733483186" target="_blank" class="text-blue-600 hover:underline text-lg">(47) 3348-3186</a>
+          <br>
+          <a href="https://wa.me/554733483186" target="_blank" class="mt-3 inline-block bg-green-600 text-white font-semibold py-2 px-6 rounded-full hover:bg-green-700 transition duration-300 text-sm sm:text-base">
+            Falar no WhatsApp
+          </a>
+        </div>
+        <div class="rounded-lg overflow-hidden shadow-lg max-w-xl mx-auto">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3559.8863207931396!2d-48.63620932379377!3d-26.84347317668615!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94d8b5847b2283df%3A0x2bb99a53b5e48398!2sAv.%20Osvaldo%20Reis%2C%203547%20-%20Praia%20Brava%2C%20Itaja%C3%AD%20-%20SC%2C%2088306-773!5e0!3m2!1spt-BR!2sbr!4v1720275817812!5m2!1spt-BR!2sbr"
+            width="100%"
+            height="350"
+            style="border:0;"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            title="Localização da NatuBrava no Google Maps">
+          </iframe>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-green-800 text-white py-6 px-6">
+    <div class="container mx-auto text-center text-sm">
+      <p>© <span id="current-year"></span> NatuBrava Produtos Naturais. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <div id="cart-overlay" class="cart-overlay fixed inset-0 bg-black bg-opacity-50 z-50"></div>
+  <div id="cart-panel" class="cart-panel fixed top-0 right-0 w-full max-w-sm h-full bg-white shadow-xl z-50 flex flex-col">
+    <div class="flex justify-between items-center p-4 border-b">
+      <h3 class="text-lg font-semibold text-green-800">Seu Carrinho</h3>
+      <button id="close-cart-button" class="text-gray-500 hover:text-gray-800 text-2xl" aria-label="Fechar Carrinho">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+    <div id="cart-items" class="cart-items flex-grow overflow-y-auto p-4 space-y-4">
+      <p id="cart-empty-message" class="text-center text-gray-500 mt-10">Seu carrinho está vazio.</p>
+    </div>
+    <div class="p-4 border-t bg-gray-50">
+      <div class="flex justify-between items-center mb-4">
+        <span class="text-lg font-semibold text-gray-700">Total:</span>
+        <span id="cart-total" class="text-xl font-bold text-green-700">R$ 0,00</span>
+      </div>
+      <button id="checkout-button" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+        Finalizar Pedido (WhatsApp)
+      </button>
+    </div>
+  </div>
+
+  <div id="name-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden items-center justify-center">
+    <div id="name-modal" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md m-4 transform transition-transform duration-300 scale-95 opacity-0">
+        <div class="text-center mb-6">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <ion-icon name="logo-whatsapp" class="text-2xl text-green-600"></ion-icon>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-3">Finalizar Pedido</h3>
+            <p class="text-base text-gray-700 mb-2">Seu pedido será enviado ao <strong>WhatsApp</strong></p>
+            <p class="text-sm text-gray-600">Nossa equipe confirmará estoque e valores</p>
+        </div>
+        
+        <div class="space-y-4">
+            <div>
+                <label for="client-name" class="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
+                <input type="text" id="client-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="Digite seu nome completo" autocomplete="name">
+                <p id="name-error" class="text-red-500 text-xs mt-1 hidden">Por favor, preencha seu nome.</p>
+            </div>
+            
+            <div>
+                <label for="client-observation" class="block text-sm font-medium text-gray-700 mb-1">Observações <span class="text-gray-400">(opcional)</span></label>
+                <textarea id="client-observation" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" placeholder="Alguma observação sobre seu pedido..."></textarea>
+            </div>
+        </div>
+        
+        <div class="mt-6 flex justify-end space-x-3">
+            <button id="cancel-checkout-button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-200">Cancelar</button>
+            <button id="confirm-checkout-button" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200 flex items-center">
+                <ion-icon name="paper-plane-outline" class="mr-1 text-sm"></ion-icon>
+                Enviar Pedido
+            </button>
+        </div>
+    </div>
+  </div>
+  
+  <div id="delivery-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden items-center justify-center">
+    <div id="delivery-modal" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg m-4 transform transition-transform duration-300 scale-95 opacity-0">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-green-800 flex items-center"><ion-icon name="bicycle-outline" class="mr-2 text-xl"></ion-icon>Informações de Entrega</h3>
+        <button id="close-delivery-modal-button" class="text-gray-500 hover:text-gray-800 text-2xl" aria-label="Fechar Modal">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+      <div class="text-sm sm:text-base text-gray-700 space-y-3">
+          <p>Olá! Para sua maior comodidade, oferecemos o serviço de entrega via <strong>Uber Entregas</strong>, com valores calculados de forma dinâmica conforme a plataforma. Caso prefira, podemos separar os itens para <strong>retirada na loja</strong>.</p>
+          <p>Para pedidos <strong>acima de R$ 70,00</strong>, a entrega na <strong>Praia Brava é gratuita</strong>! A entrega é feita no mesmo dia para pedidos realizados até as 12h, com entrega entre 14h e 17h30, durante a semana. 🛵</p>
+          <p>Qual opção é mais conveniente para você? Estamos sempre à disposição para esclarecer qualquer dúvida e garantir a melhor experiência! 😊🍃</p>
+      </div>
+      <div class="mt-6 text-right">
+          <button id="ok-delivery-modal-button" class="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Entendi</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="club-info-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden items-center justify-center">
+    <div id="club-info-modal" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg m-4 transform transition-transform duration-300 scale-95 opacity-0">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-green-800 flex items-center">
+          <ion-icon name="star" class="mr-2 text-xl text-yellow-500"></ion-icon>
+          Club NatuBrava
+        </h3>
+        <button id="close-club-modal-button" class="text-gray-500 hover:text-gray-800 text-2xl" aria-label="Fechar Modal">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+      <div class="text-sm sm:text-base text-gray-700 space-y-4">
+          <div class="bg-gradient-to-r from-green-50 to-yellow-50 p-4 rounded-lg border-l-4 border-green-500">
+            <h4 class="font-semibold text-green-800 mb-2 flex items-center">
+              <ion-icon name="gift-outline" class="mr-2"></ion-icon>
+              O que é o Club NatuBrava?
+            </h4>
+            <p>É nosso <strong>programa de vantagens exclusivas</strong> para clientes especiais! Oferecemos preços diferenciados em produtos selecionados para quem faz parte do nosso clube.</p>
+          </div>
+          
+          <div class="space-y-3">
+            <h4 class="font-semibold text-green-800 flex items-center">
+              <ion-icon name="checkmark-circle-outline" class="mr-2"></ion-icon>
+              Como identificar produtos Club?
+            </h4>
+            <p>Produtos com preços especiais são destacados com:</p>
+            <ul class="list-disc list-inside ml-4 space-y-1">
+              <li>Badge <span class="inline-block bg-green-600 text-white text-xs px-2 py-1 rounded font-bold">CLUB</span> verde</li>
+              <li>Preço original riscado</li>
+              <li>Preço especial em destaque</li>
+              <li>Borda verde diferenciada no produto</li>
+            </ul>
+          </div>
+          
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-blue-800 mb-2 flex items-center">
+              <ion-icon name="people-outline" class="mr-2"></ion-icon>
+              Como participar?
+            </h4>
+            <p>Entre em contato conosco via <strong>WhatsApp</strong> e saiba como fazer parte do Club NatuBrava! É simples e os benefícios começam imediatamente.</p>
+          </div>
+          
+          <div class="text-center pt-2">
+            <a href="https://wa.me/554733483186?text=Olá! Gostaria de saber como participar do Club NatuBrava 🌟" target="_blank" class="inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300">
+              <ion-icon name="logo-whatsapp" class="mr-2"></ion-icon>
+              Quero participar do Club!
+            </a>
+          </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script carregado no final para otimizar performance -->
+  <script src="script.js" defer></script>
+</body>
+</html>
