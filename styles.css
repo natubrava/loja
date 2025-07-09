@@ -1,3 +1,9 @@
+/* ===== CORREÇÕES HEADER ===== */
+/* Garante que botões no menu desktop tenham fundo transparente como os links */
+header nav button {
+  background-color: transparent;
+}
+
 /* ===== CORREÇÕES PARA LAYOUT SHIFT (CLS) ===== */
 
 /* 1. Header com altura mínima fixa */
@@ -676,23 +682,4 @@ button {
   font-family: inherit;
   font-weight: inherit;
   line-height: inherit;
-}
-
-/* ===== CORREÇÃO FORÇADA PARA BOTÕES DO HEADER ===== */
-#club-info-button,
-#delivery-info-button,
-#club-info-button-mobile,
-#delivery-info-button-mobile,
-header nav a,
-header nav button {
-  color: #15803d !important;
-}
-
-#club-info-button:hover,
-#delivery-info-button:hover,
-#club-info-button-mobile:hover,
-#delivery-info-button-mobile:hover,
-header nav a:hover,
-header nav button:hover {
-  color: #14532d !important;
 }
