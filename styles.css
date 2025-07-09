@@ -1,3 +1,47 @@
+/* ===== CORREÇÕES PARA LAYOUT SHIFT (CLS) ===== */
+
+/* 1. Header com altura mínima fixa */
+header {
+  min-height: 80px;
+}
+
+header nav {
+  min-height: 60px;
+}
+
+/* 2. Logo com dimensões fixas para evitar shift */
+header img[alt="Logo da NatuBrava"] {
+  width: 160px !important;
+  height: 60px !important;
+  object-fit: contain;
+}
+
+/* 3. Seções com altura mínima para evitar shift durante carregamento */
+.bg-gradient-to-r {
+  min-height: 200px;
+}
+
+#sobre {
+  min-height: 500px;
+}
+
+/* 4. Container de filtros com altura mínima */
+#category-filters {
+  min-height: 50px;
+}
+
+/* 5. Container de busca com altura mínima */
+.max-w-xl.mx-auto.mb-6 {
+  min-height: 80px;
+}
+
+/* 6. Fonte web com fallback para evitar shift */
+body {
+  font-display: swap;
+}
+
+/* ===== CÓDIGO ORIGINAL DO STYLES.CSS ===== */
+
 /* Font */
 body {
   font-family: 'Inter', sans-serif;
