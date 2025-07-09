@@ -659,3 +659,21 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* Form elements */
+input, textarea, select {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+input:focus, textarea:focus {
+  --tw-ring-offset-width: 0px;
+  --tw-ring-color: #22c55e;
+}
+
+button {
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
