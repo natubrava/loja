@@ -61,6 +61,18 @@ header nav button {
   background-color: transparent;
 }
 
+/* ===== ESTILOS PARA INSTAGRAM ===== */
+.instagram-btn {
+  background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+  box-shadow: 0 4px 12px rgba(131, 58, 180, 0.3);
+}
+
+.instagram-btn:hover {
+  background: linear-gradient(135deg, #6c2b8f 0%, #e01818 50%, #e09b39 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(131, 58, 180, 0.4);
+}
+
 /* ===== CORREÇÕES PARA LAYOUT SHIFT (CLS) ===== */
 
 /* 1. Header com altura mínima fixa */
