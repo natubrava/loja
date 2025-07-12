@@ -365,7 +365,7 @@ async function loadProductsFromSheet(isBackground = false) {
       if (!isBackground) showStatus('Conectando via proxy...');
       response = await fetchWithProxy(CONFIG.SHEET_CSV_URL);
     }
-    
+
     if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
     
     if (!isBackground) showStatus('Processando dados da planilha...');
@@ -1012,7 +1012,7 @@ function setupEventListeners() {
     const observation = elements.clientObservation.value.trim();
     
     let total = 0;
-    let message = `Olá NatuBrava! 👋\n*Pedido de:* ${clientName}\n\n🛒 *RESUMO DO PEDIDO* 🛒\n`;
+    let message = `Olá NatuBrava!\n*Pedido de:* ${clientName}\n\n*RESUMO DO PEDIDO*\n`;
     cart.forEach(item => {
       const itemTotal = item.price * item.quantity;
       total += itemTotal;
@@ -1023,7 +1023,7 @@ function setupEventListeners() {
       
       message += `-----------------------------------\n*Produto:* ${item.name}${priceLabel}\n*SKU:* ${item.sku}\n*Quantidade:* ${item.isGranel ? `${item.quantity}g` : `Qtd: ${item.quantity}`}\n*Subtotal:* R$ ${formatPrice(itemTotal)}\n`;
     });
-    message += `-----------------------------------\n\n💰 *TOTAL GERAL: R$ ${formatPrice(total)}*\n`;
+    message += `-----------------------------------\n\n*TOTAL GERAL: R$ ${formatPrice(total)}*\n`;
     
     if (observation) {
         message += `\n*Observações:* ${observation}\n`;
