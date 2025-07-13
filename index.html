@@ -257,26 +257,25 @@
   <div id="delivery-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden items-center justify-center">
     <div id="delivery-modal" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg m-4 transform transition-transform duration-300 scale-95 opacity-0">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-semibold text-green-800 flex items-center"><ion-icon name="bicycle-outline" class="mr-2 text-xl"></ion-icon>📦 Informações de Entrega</h3>
+        <h3 class="text-lg font-semibold text-green-800">📦 Informações de Entrega</h3>
         <button id="close-delivery-modal-button" class="text-gray-500 hover:text-gray-800 text-2xl" aria-label="Fechar Modal">
           <ion-icon name="close-outline"></ion-icon>
         </button>
       </div>
-      <div class="text-sm sm:text-base text-gray-700 space-y-3">
+      <div class="text-sm sm:text-base text-gray-700 space-y-4">
           <p>Para sua comodidade, oferecemos <strong>entregas via Uber Entregas</strong>, com valores dinâmicos definidos pela própria plataforma, conforme a distância e o horário.</p>
           <p>Se preferir, você também pode optar pela <strong>retirada na loja</strong> — preparamos tudo com antecedência para agilizar seu atendimento.</p>
           <p>⏰ Pedidos realizados até <strong>12h (de segunda a sexta)</strong> costumam ser entregues no mesmo dia, no período da tarde <strong>(entre 14h e 17h30)</strong>.</p>
           <p>Em caso de dúvidas ou para combinar a melhor forma de envio, é só nos chamar:</p>
-          <div class="text-center pt-2">
-            <a href="https://wa.me/554733483186" target="_blank" class="inline-flex items-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300">
-              <ion-icon name="logo-whatsapp" class="mr-2"></ion-icon>
-              📞 Falar com a NatuBrava no WhatsApp
-            </a>
+          <div class="text-center mt-4 mb-4">
+            <button onclick="window.open('https://wa.me/554733483186', '_blank')" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-300">
+              Falar com a NatuBrava no WhatsApp
+            </button>
           </div>
           <p class="text-center text-green-700 font-medium">Estamos à disposição para garantir a melhor experiência! 🌿😊</p>
       </div>
       <div class="mt-6 text-right">
-          <button id="ok-delivery-modal-button" class="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Entendi</button>
+          <button id="ok-delivery-modal-button" class="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-200">Entendi</button>
       </div>
     </div>
   </div>
