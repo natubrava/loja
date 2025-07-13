@@ -526,7 +526,8 @@ function renderProducts() {
     card.dataset.id = product.id;
     
     const isGranel = product.isGranel;
-    const initialQty = isGranel ? product.minQuantity : 1;
+    // ALTERAÇÃO: Produtos granel agora iniciam com 100g
+    const initialQty = isGranel ? 100 : 1;
     const hasClubPrice = product.clubPrice !== null && product.clubPrice > 0;
     
     let priceHTML = '';
@@ -568,7 +569,7 @@ function renderProducts() {
           <div class="flex justify-between items-center mb-3">
             ${priceHTML}
             <div class="flex items-center space-x-1">
-              <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="-1" disabled><ion-icon name="remove-outline" class="pointer-events-none"></ion-icon></button>
+              <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="-1"><ion-icon name="remove-outline" class="pointer-events-none"></ion-icon></button>
               <span class="product-quantity font-medium text-base ${isGranel ? 'w-16' : 'w-6'} text-center">${isGranel ? `${initialQty}g` : initialQty}</span>
               <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="1"><ion-icon name="add-outline" class="pointer-events-none"></ion-icon></button>
             </div>
@@ -1029,7 +1030,8 @@ function setupEventListeners() {
         message += `\n*Observações:* ${observation}\n`;
     }
 
-    message += `\nAguardo o retorno. Obrigado!`;
+    // ALTERAÇÃO: Nova mensagem de confirmação de estoque e valores
+    message += `\n📋 *Este pedido é para confirmação de estoque e valores.*\nEstou ciente de que os preços apresentados no catálogo online são informativos e podem sofrer alterações.\n\n✅ Aguardo confirmação de disponibilidade e valores atualizados.\n\nObrigado!`;
     
     window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
     
