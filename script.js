@@ -457,10 +457,27 @@ async function loadProductsFromSheet(isBackground = false) {
   }
 }
 
-// ===== RENDERIZAÇÃO DE CATEGORIAS =====
+// ===== RENDERIZAÇÃO DE CATEGORIAS (MODIFICADA PARA UNIR VIAAROMA) =====
 function renderCategoryFilters() {
   const clubProducts = products.filter(p => p.clubPrice !== null && p.clubPrice > 0);
-  const regularCategories = [...new Set(products.map(p => p.category))];
+  
+  // Extrair categorias originais
+  const originalCategories = [...new Set(products.map(p => p.category))];
+  
+  // Filtrar e transformar categorias para exibição
+  const displayCategories = [];
+  let hasViaAromaCategories = false;
+  
+  originalCategories.forEach(category => {
+    if (category === 'OLEO ESSENCIAL' || category === 'ESSENCIAS') {
+      if (!hasViaAromaCategories) {
+        displayCategories.push('VIAAROMA');
+        hasViaAromaCategories = true;
+      }
+    } else {
+      displayCategories.push(category);
+    }
+  });
   
   let categories = ['Todos'];
   
@@ -468,7 +485,7 @@ function renderCategoryFilters() {
     categories.push('⭐ Club NatuBrava');
   }
   
-  categories.push(...regularCategories);
+  categories.push(...displayCategories);
   
   elements.categoryFilters.innerHTML = categories.map(category => {
     let buttonClass = 'category-btn text-sm sm:text-base px-4 py-2 rounded-full';
@@ -483,7 +500,7 @@ function renderCategoryFilters() {
   }).join('');
 }
 
-// ===== RENDERIZAÇÃO OTIMIZADA DE PRODUTOS =====
+// ===== RENDERIZAÇÃO OTIMIZADA DE PRODUTOS (MODIFICADA PARA FILTRAR VIAAROMA) =====
 function renderProducts() {
   const filterCategory = currentFilter;
   const searchTerm = normalizeText(elements.searchBox.value);
@@ -495,6 +512,9 @@ function renderProducts() {
       inCategory = true;
     } else if (filterCategory === '⭐ Club NatuBrava') {
       inCategory = product.clubPrice !== null && product.clubPrice > 0;
+    } else if (filterCategory === 'VIAAROMA') {
+      // Aqui é onde unimos as duas categorias
+      inCategory = product.category === 'OLEO ESSENCIAL' || product.category === 'ESSENCIAS';
     } else {
       inCategory = product.category === filterCategory;
     }
