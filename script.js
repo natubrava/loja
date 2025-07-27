@@ -9,7 +9,9 @@ const CONFIG = {
   CACHE_DURATION: 3 * 60 * 1000, // 3 minutos - permite atualizações diárias
   CACHE_KEY: 'natuBrava_products_cache',
   ITEMS_PER_PAGE: 60, // Produtos por página
-  SCROLL_THRESHOLD: 300 // Quando mostrar botão voltar ao topo
+  SCROLL_THRESHOLD: 300, // Quando mostrar botão voltar ao topo
+  LOW_STOCK_THRESHOLD: 100, // Gramas - estoque baixo para granel
+  MIN_GRANEL_QUANTITY: 50 // Quantidade mínima para granel
 };
 
 // ===== FUNÇÕES DE CACHE OTIMIZADAS =====
@@ -163,6 +165,16 @@ const elements = {
   productCounter: document.getElementById('product-counter'),
   backToTop: document.getElementById('back-to-top'),
   searchResults: document.getElementById('search-results'),
+  // Novos elementos para o modal "Avise-me"
+  notifyModalOverlay: document.getElementById('notify-modal-overlay'),
+  notifyModal: document.getElementById('notify-modal'),
+  clientNotifyName: document.getElementById('client-notify-name'),
+  clientNotifyPhone: document.getElementById('client-notify-phone'),
+  clientNotifyObservation: document.getElementById('client-notify-observation'),
+  notifyError: document.getElementById('notify-error'),
+  confirmNotifyButton: document.getElementById('confirm-notify-button'),
+  cancelNotifyButton: document.getElementById('cancel-notify-button'),
+  closeNotifyModalButton: document.getElementById('close-notify-modal-button'),
 };
 
 // ===== FUNÇÕES UTILITÁRIAS =====
@@ -223,6 +235,22 @@ function parseCSV(csvText) {
   }).filter(item => item.SKU && item.NOME_SITE);
 }
 
+// ===== NOVA FUNÇÃO PARA DETERMINAR STATUS DO PRODUTO =====
+function getProductStatus(product) {
+  if (!product.isGranel) {
+    // Produto unitário
+    if (product.stock <= 0) return 'out_of_stock';
+    if (product.stock < 2) return 'low_stock';
+    return 'available';
+  } else {
+    // Produto a granel
+    const stockInGrams = product.stock * 1000;
+    if (stockInGrams <= 0) return 'out_of_stock';
+    if (stockInGrams < CONFIG.LOW_STOCK_THRESHOLD) return 'low_stock';
+    return 'available';
+  }
+}
+
 // ===== LAZY LOADING DE IMAGENS =====
 function setupLazyLoading() {
   const imageObserver = new IntersectionObserver((entries) => {
@@ -232,7 +260,7 @@ function setupLazyLoading() {
         const src = img.dataset.src;
         
         if (src) {
-          img.src = src; // Mantém URL original do Cloudinary
+          img.src = src;
           img.removeAttribute('data-src');
           imageObserver.unobserve(img);
         }
@@ -243,7 +271,6 @@ function setupLazyLoading() {
     threshold: 0.1
   });
   
-  // Observar todas as imagens lazy
   document.querySelectorAll('img[data-src]').forEach(img => {
     imageObserver.observe(img);
   });
@@ -284,7 +311,9 @@ function validateCartWithProducts() {
       continue;
     }
     
-    if (currentProduct.stock <= 0) {
+    // Verificar se produto está disponível para venda
+    const status = getProductStatus(currentProduct);
+    if (status === 'out_of_stock' || status === 'low_stock') {
       hasChanges = true;
       removedItems.push(currentProduct.name);
       continue;
@@ -314,7 +343,7 @@ function validateCartWithProducts() {
   renderCart();
   
   if (removedItems.length > 0) {
-    showNotification(`Removido(s) do carrinho: ${removedItems.join(', ')} (sem estoque)`, 5000);
+    showNotification(`Removido(s) do carrinho: ${removedItems.join(', ')} (indisponível)`, 5000);
   }
   
   if (adjustedItems.length > 0) {
@@ -399,7 +428,6 @@ async function loadProductsFromSheet(isBackground = false) {
       const isGranel = (item.CATEGORIA || '').toUpperCase() === 'GRANEL';
       const basePrice = parsePrice(item.PRECO);
       
-      // CORREÇÃO: Usar parseFloat para estoque em vez de parseInt
       let stockValue;
       if (item.ESTOQUE) {
         stockValue = parseFloat(item.ESTOQUE.toString().replace(',', '.')) || 0;
@@ -410,12 +438,10 @@ async function loadProductsFromSheet(isBackground = false) {
       // Buscar preço club em diferentes possíveis colunas
       let clubPrice = 0;
       
-      // Tentar CLUB_VLR primeiro
       if (item.CLUB_VLR) {
         clubPrice = parsePrice(item.CLUB_VLR);
       }
       
-      // Se não encontrou, tentar outras variações
       if (clubPrice === 0) {
         for (const col of possibleClubColumns) {
           if (item[col]) {
@@ -430,7 +456,7 @@ async function loadProductsFromSheet(isBackground = false) {
       
       const finalClubPrice = clubPrice > 0 ? (isGranel ? clubPrice / 1000 : clubPrice) : null;
       
-      return {
+      const product = {
         id: parseInt(item.SKU) || index + Date.now(),
         sku: item.SKU || `ITEM${index + 1}`,
         name: item.NOME_SITE || 'Produto sem nome',
@@ -440,10 +466,15 @@ async function loadProductsFromSheet(isBackground = false) {
         category: item.CATEGORIA || 'Outros',
         image: item.URL_FOTO || `https://placehold.co/300x200/166534/ffffff?text=${item.SKU}`,
         isGranel: isGranel,
-        minQuantity: isGranel ? 50 : 1,
-        quantityStep: isGranel ? 50 : 1,
+        minQuantity: isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1,
+        quantityStep: isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1,
       };
-    }).filter(p => p.stock > 0 && p.price > 0 && p.name !== 'Produto sem nome');
+      
+      // Adicionar status do produto
+      product.status = getProductStatus(product);
+      
+      return product;
+    }).filter(p => p.price > 0 && p.name !== 'Produto sem nome');
     
     if (newProducts.length === 0) {
       throw new Error('Nenhum produto válido encontrado na planilha.');
@@ -476,12 +507,18 @@ async function loadProductsFromSheet(isBackground = false) {
 
 // ===== RENDERIZAÇÃO DE CATEGORIAS COM CONTADORES =====
 function renderCategoryFilters() {
-  const clubProducts = products.filter(p => p.clubPrice !== null && p.clubPrice > 0);
+  const clubProducts = products.filter(p => p.clubPrice !== null && p.clubPrice > 0 && (p.status === 'available' || p.status === 'low_stock' || p.status === 'out_of_stock'));
+  const availableProducts = products.filter(p => p.status === 'available');
+  const outOfStockProducts = products.filter(p => p.status === 'out_of_stock');
   
-  // Contar produtos por categoria
+  // Contar produtos por categoria (incluindo fora de estoque)
   const categoryCount = {};
+  const availableCategoryCount = {};
   products.forEach(p => {
     categoryCount[p.category] = (categoryCount[p.category] || 0) + 1;
+    if (p.status === 'available') {
+      availableCategoryCount[p.category] = (availableCategoryCount[p.category] || 0) + 1;
+    }
   });
   
   // Extrair categorias originais
@@ -491,6 +528,7 @@ function renderCategoryFilters() {
   const displayCategories = [];
   let hasViaAromaCategories = false;
   let viaAromaCount = 0;
+  let viaAromaAvailableCount = 0;
   
   originalCategories.forEach(category => {
     if (category === 'OLEO ESSENCIAL' || category === 'ESSENCIAS') {
@@ -499,24 +537,50 @@ function renderCategoryFilters() {
         hasViaAromaCategories = true;
       }
       viaAromaCount += categoryCount[category] || 0;
+      viaAromaAvailableCount += availableCategoryCount[category] || 0;
     } else {
       displayCategories.push(category);
     }
   });
   
-  let categories = [{ name: 'Todos', count: products.length }];
+  let categories = [{ 
+    name: 'Todos', 
+    count: products.length, 
+    availableCount: availableProducts.length 
+  }];
   
   if (clubProducts.length > 0) {
-    categories.push({ name: '⭐ Club NatuBrava', count: clubProducts.length });
+    const availableClubProducts = clubProducts.filter(p => p.status === 'available');
+    categories.push({ 
+      name: '⭐ Club NatuBrava', 
+      count: clubProducts.length,
+      availableCount: availableClubProducts.length 
+    });
   }
   
   displayCategories.forEach(cat => {
     if (cat === 'VIAAROMA') {
-      categories.push({ name: cat, count: viaAromaCount });
+      categories.push({ 
+        name: cat, 
+        count: viaAromaCount,
+        availableCount: viaAromaAvailableCount 
+      });
     } else {
-      categories.push({ name: cat, count: categoryCount[cat] || 0 });
+      categories.push({ 
+        name: cat, 
+        count: categoryCount[cat] || 0,
+        availableCount: availableCategoryCount[cat] || 0 
+      });
     }
   });
+  
+  if (outOfStockProducts.length > 0) {
+    categories.push({ 
+      name: '❌ Fora de Estoque', 
+      count: outOfStockProducts.length,
+      availableCount: 0 
+    });
+  }
   
   elements.categoryFilters.innerHTML = categories.map(cat => {
     let buttonClass = 'category-btn text-sm sm:text-base px-4 py-2 rounded-full';
@@ -524,9 +588,13 @@ function renderCategoryFilters() {
     
     if (cat.name === '⭐ Club NatuBrava') {
       buttonClass += ' club-category-btn';
-      buttonContent = `<span class="flex items-center"><ion-icon name="star" class="text-yellow-400 mr-1"></ion-icon>Club NatuBrava <span class="ml-2 text-xs bg-white bg-opacity-30 px-2 py-0.5 rounded-full">${cat.count}</span></span>`;
+      buttonContent = `<span class="flex items-center"><ion-icon name="star" class="text-yellow-400 mr-1"></ion-icon>Club NatuBrava <span class="ml-2 text-xs bg-white bg-opacity-30 px-2 py-0.5 rounded-full">${cat.availableCount}/${cat.count}</span></span>`;
+    } else if (cat.name === '❌ Fora de Estoque') {
+      buttonClass += ' out-of-stock-category-btn';
+      buttonContent = `${cat.name} <span class="text-xs ml-1 bg-red-700 bg-opacity-20 px-2 py-0.5 rounded-full">${cat.count}</span>`;
     } else {
-      buttonContent = `${cat.name} <span class="text-xs ml-1 bg-green-700 bg-opacity-20 px-2 py-0.5 rounded-full">${cat.count}</span>`;
+      const countDisplay = cat.availableCount === cat.count ? cat.count : `${cat.availableCount}/${cat.count}`;
+      buttonContent = `${cat.name} <span class="text-xs ml-1 bg-green-700 bg-opacity-20 px-2 py-0.5 rounded-full">${countDisplay}</span>`;
     }
     
     return `<button class="${buttonClass}" data-category="${cat.name}">${buttonContent}</button>`;
@@ -537,9 +605,9 @@ function renderCategoryFilters() {
 function applyFilters() {
   const searchTerm = normalizeText(elements.searchBox.value);
   const searchTerms = searchTerm.split(' ').filter(t => t.length > 0);
-
+  
   filteredProducts = products.filter(product => {
-    // Filtro de categoria (lógica original mantida)
+    // Filtro de categoria
     let inCategory = false;
     if (currentFilter === 'Todos') {
       inCategory = true;
@@ -547,38 +615,40 @@ function applyFilters() {
       inCategory = product.clubPrice !== null && product.clubPrice > 0;
     } else if (currentFilter === 'VIAAROMA') {
       inCategory = product.category === 'OLEO ESSENCIAL' || product.category === 'ESSENCIAS';
+    } else if (currentFilter === '❌ Fora de Estoque') {
+      inCategory = product.status === 'out_of_stock';
     } else {
       inCategory = product.category === currentFilter;
     }
     
     // Filtro de busca (nome + SKU)
-    let matchesSearch = false; // Inicia como falso
+    let matchesSearch = true;
     if (searchTerms.length > 0) {
       const productText = normalizeText(`${product.name} ${product.sku}`);
       matchesSearch = searchTerms.every(term => productText.includes(term));
     }
-
-    // ===== LÓGICA ALTERADA =====
-    // Se o usuário estiver pesquisando ativamente (caixa de busca não está vazia)...
-    if (searchTerms.length > 0) {
-      // ...retorna apenas os produtos que correspondem à busca, ignorando a categoria.
-      return matchesSearch;
-    } else {
-      // ...se a busca estiver vazia, aplica o filtro de categoria normalmente.
-      return inCategory;
-    }
+    
+    return inCategory && matchesSearch;
   });
   
-  // Ordenar produtos Club primeiro se estiver na categoria Club
-  if (currentFilter === '⭐ Club NatuBrava') {
-    filteredProducts.sort((a, b) => {
+  // Ordenar produtos: disponíveis primeiro, depois club, depois fora de estoque
+  filteredProducts.sort((a, b) => {
+    // Primeiro critério: status (disponível > estoque baixo > fora de estoque)
+    if (a.status !== b.status) {
+      const statusOrder = { 'available': 0, 'low_stock': 1, 'out_of_stock': 2 };
+      return statusOrder[a.status] - statusOrder[b.status];
+    }
+    
+    // Segundo critério: produtos club primeiro (se ambos estão disponíveis)
+    if (a.status === 'available' && b.status === 'available') {
       const aHasClub = a.clubPrice !== null && a.clubPrice > 0;
       const bHasClub = b.clubPrice !== null && b.clubPrice > 0;
       if (aHasClub && !bHasClub) return -1;
       if (!aHasClub && bHasClub) return 1;
-      return 0;
-    });
-  }
+    }
+    
+    return 0;
+  });
   
   // Calcular páginas
   totalPages = Math.ceil(filteredProducts.length / CONFIG.ITEMS_PER_PAGE);
@@ -605,16 +675,41 @@ function renderProducts() {
   
   pageProducts.forEach(product => {
     const card = document.createElement('div');
-    card.className = 'product-card bg-white rounded-lg shadow-md overflow-hidden';
+    const isGranel = product.isGranel;
+    const initialQty = isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1;
+    const hasClubPrice = product.clubPrice !== null && product.clubPrice > 0;
+    const status = product.status;
+    
+    // Definir classes do card baseado no status
+    let cardClass = 'product-card bg-white rounded-lg shadow-md overflow-hidden';
+    if (status === 'out_of_stock') {
+      cardClass += ' out-of-stock-card';
+    } else if (status === 'low_stock') {
+      cardClass += ' low-stock-card';
+    }
+    if (hasClubPrice && status !== 'out_of_stock') {
+      cardClass += ' club-product-card';
+    }
+    
+    card.className = cardClass;
     card.style.animation = 'fadeInUp 0.5s ease-out';
     card.dataset.id = product.id;
     
-    const isGranel = product.isGranel;
-    const initialQty = isGranel ? 100 : 1;
-    const hasClubPrice = product.clubPrice !== null && product.clubPrice > 0;
-    
+    // Determinar preços e labels
     let priceHTML = '';
-    if (hasClubPrice) {
+    let statusBadgeHTML = '';
+    let quantityControlsHTML = '';
+    let buttonHTML = '';
+    
+    // Badge de status
+    if (status === 'out_of_stock') {
+      statusBadgeHTML = '<div class="status-badge out-of-stock-badge">Produto Indisponível</div>';
+    } else if (status === 'low_stock') {
+      statusBadgeHTML = '<div class="status-badge low-stock-badge">Últimas Unidades</div>';
+    }
+    
+    // Preços
+    if (hasClubPrice && status !== 'out_of_stock') {
       const normalPrice = isGranel ? product.price * 100 : product.price;
       const clubPriceDisplay = isGranel ? product.clubPrice * 100 : product.clubPrice;
       priceHTML = `
@@ -632,6 +727,29 @@ function renderProducts() {
       priceHTML = `<span class="text-lg font-bold text-green-700">R$ ${formatPrice(isGranel ? product.price * 100 : product.price)}${isGranel ? '/100g' : ''}</span>`;
     }
     
+    // Controles de quantidade e botão
+    if (status === 'out_of_stock') {
+      quantityControlsHTML = '';
+      buttonHTML = `
+        <button class="notify-me-btn w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center space-x-1" data-product-id="${product.id}">
+          <ion-icon name="notifications-outline" class="text-base"></ion-icon>
+          <span>Avise-me assim que chegar</span>
+        </button>`;
+    } else {
+      quantityControlsHTML = `
+        <div class="flex items-center space-x-1">
+          <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="-1"><ion-icon name="remove-outline" class="pointer-events-none"></ion-icon></button>
+          <span class="product-quantity font-medium text-base ${isGranel ? 'w-16' : 'w-6'} text-center">${isGranel ? `${initialQty}g` : initialQty}</span>
+          <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="1"><ion-icon name="add-outline" class="pointer-events-none"></ion-icon></button>
+        </div>`;
+      
+      buttonHTML = `
+        <button class="add-to-cart-btn w-full bg-green-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-green-700 flex items-center justify-center space-x-1">
+          <ion-icon name="cart-outline" class="text-base"></ion-icon>
+          <span>Adicionar</span>
+        </button>`;
+    }
+    
     // Destacar termos de busca no nome
     let displayName = product.name;
     const searchTerm = elements.searchBox.value.trim();
@@ -643,7 +761,7 @@ function renderProducts() {
     const imageHTML = `
       <img data-src="${product.image}" 
            alt="${product.name}" 
-           class="product-image" 
+           class="product-image ${status === 'out_of_stock' ? 'grayscale' : ''}" 
            loading="lazy"
            onerror="this.parentElement.innerHTML='<div class=\\'product-image-error\\'>Imagem<br>Indisponível</div>'">
     `;
@@ -651,6 +769,7 @@ function renderProducts() {
     card.innerHTML = `
       <div class="product-image-container">
         ${imageHTML}
+        ${statusBadgeHTML}
       </div>
       <div class="product-card-content">
         <h3 class="text-lg font-semibold text-green-800 mb-1">${displayName}</h3>
@@ -658,14 +777,10 @@ function renderProducts() {
         <div class="product-card-footer">
           <div class="flex justify-between items-center mb-3">
             ${priceHTML}
-            <div class="flex items-center space-x-1">
-              <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="-1"><ion-icon name="remove-outline" class="pointer-events-none"></ion-icon></button>
-              <span class="product-quantity font-medium text-base ${isGranel ? 'w-16' : 'w-6'} text-center">${isGranel ? `${initialQty}g` : initialQty}</span>
-              <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="1"><ion-icon name="add-outline" class="pointer-events-none"></ion-icon></button>
-            </div>
+            ${quantityControlsHTML}
           </div>
-          ${isGranel ? `<div class="text-center mb-2"><span class="text-sm font-semibold text-green-800">Total: R$ <span class="product-total-price">${formatPrice((hasClubPrice ? product.clubPrice : product.price) * initialQty)}</span></span></div>` : ''}
-          <button class="add-to-cart-btn w-full bg-green-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-green-700 flex items-center justify-center space-x-1"><ion-icon name="cart-outline" class="text-base"></ion-icon><span>Adicionar</span></button>
+          ${isGranel && status !== 'out_of_stock' ? `<div class="text-center mb-2"><span class="text-sm font-semibold text-green-800">Total: R$ <span class="product-total-price">${formatPrice((hasClubPrice ? product.clubPrice : product.price) * initialQty)}</span></span></div>` : ''}
+          ${buttonHTML}
         </div>
       </div>`;
     
@@ -808,6 +923,18 @@ function addToCart(productId, quantity) {
   const product = products.find(p => p.id === productId);
   if (!product) return;
 
+  // Verificar se produto está disponível
+  if (product.status === 'out_of_stock' || product.status === 'low_stock') {
+    showNotification('Este produto não está disponível para compra no momento.');
+    return;
+  }
+
+  // Verificação rigorosa da quantidade mínima para granel
+  if (product.isGranel && quantity < CONFIG.MIN_GRANEL_QUANTITY) {
+    showNotification(`Quantidade mínima para produtos a granel: ${CONFIG.MIN_GRANEL_QUANTITY}g`);
+    return;
+  }
+
   const existingItem = cart.find(item => item.id === productId);
   const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
   const newTotalQuantity = currentQuantityInCart + quantity;
@@ -846,8 +973,8 @@ function updateCartQuantity(productId, change) {
   const item = cart[itemIndex];
   
   const currentProduct = products.find(p => p.id === productId);
-  const step = currentProduct ? (currentProduct.isGranel ? currentProduct.quantityStep : 1) : (item.isGranel ? 50 : 1);
-  const minQty = currentProduct ? (currentProduct.isGranel ? currentProduct.minQuantity : 1) : (item.isGranel ? 50 : 1);
+  const step = currentProduct ? (currentProduct.isGranel ? currentProduct.quantityStep : 1) : (item.isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1);
+  const minQty = currentProduct ? (currentProduct.isGranel ? currentProduct.minQuantity : 1) : (item.isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1);
   
   let newQuantity = item.quantity + (change * step);
   const maxStock = currentProduct ? (currentProduct.isGranel ? currentProduct.stock * 1000 : currentProduct.stock) : 9999;
@@ -914,7 +1041,7 @@ function renderCart() {
   elements.checkoutButton.disabled = cart.length === 0;
 }
 
-// ===== MODAIS (MANTIDOS INTACTOS) =====
+// ===== MODAIS (MANTIDOS E EXPANDIDOS) =====
 function openCartPanel() { 
   elements.cartPanel.classList.add('open'); 
   elements.cartOverlay.classList.add('open'); 
@@ -949,6 +1076,105 @@ function closeNameModal() {
   elements.clientNameInput.classList.remove('border-red-500');
   elements.clientNameInput.value = '';
   elements.clientObservation.value = '';
+}
+
+// ===== NOVO MODAL "AVISE-ME" =====
+function openNotifyModal(productId) {
+  const product = products.find(p => p.id === productId);
+  if (!product) return;
+  
+  // Definir dados do produto no modal
+  document.getElementById('notify-product-name').textContent = product.name;
+  document.getElementById('notify-product-sku').textContent = product.sku;
+  
+  elements.notifyModalOverlay.classList.add('open');
+  elements.notifyModalOverlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => {
+    elements.notifyModal.style.transform = 'scale(1)';
+    elements.notifyModal.style.opacity = '1';
+  }, 50);
+  
+  // Armazenar ID do produto no modal
+  elements.notifyModal.dataset.productId = productId;
+}
+
+function closeNotifyModal() {
+  elements.notifyModal.style.transform = 'scale(0.95)';
+  elements.notifyModal.style.opacity = '0';
+  setTimeout(() => {
+    elements.notifyModalOverlay.classList.remove('open');
+    elements.notifyModalOverlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }, 300);
+  
+  // Limpar formulário
+  elements.notifyError.classList.add('hidden');
+  elements.clientNotifyName.classList.remove('border-red-500');
+  elements.clientNotifyPhone.classList.remove('border-red-500');
+  elements.clientNotifyName.value = '';
+  elements.clientNotifyPhone.value = '';
+  elements.clientNotifyObservation.value = '';
+  delete elements.notifyModal.dataset.productId;
+}
+
+function sendNotifyRequest() {
+  const productId = parseInt(elements.notifyModal.dataset.productId);
+  const product = products.find(p => p.id === productId);
+  if (!product) return;
+  
+  const clientName = elements.clientNotifyName.value.trim();
+  const clientPhone = elements.clientNotifyPhone.value.trim();
+  const observation = elements.clientNotifyObservation.value.trim();
+  
+  // Validação
+  let hasError = false;
+  if (!clientName) {
+    elements.clientNotifyName.classList.add('border-red-500');
+    hasError = true;
+  } else {
+    elements.clientNotifyName.classList.remove('border-red-500');
+  }
+  
+  if (!clientPhone) {
+    elements.clientNotifyPhone.classList.add('border-red-500');
+    hasError = true;
+  } else {
+    elements.clientNotifyPhone.classList.remove('border-red-500');
+  }
+  
+  if (hasError) {
+    elements.notifyError.classList.remove('hidden');
+    return;
+  }
+  
+  elements.notifyError.classList.add('hidden');
+  
+  // Montar mensagem
+  let message = `🔔 *AVISO DE INTERESSE EM PRODUTO*\n\n`;
+  message += `*Cliente:* ${clientName}\n`;
+  message += `*Telefone:* ${clientPhone}\n\n`;
+  message += `*PRODUTO SOLICITADO*\n`;
+  message += `*Nome:* ${product.name}\n`;
+  message += `*SKU:* ${product.sku}\n`;
+  message += `*Categoria:* ${product.category}\n\n`;
+  
+  if (observation) {
+    message += `*Observações do cliente:* ${observation}\n\n`;
+  }
+  
+  message += `📋 *O cliente gostaria de ser avisado quando este produto voltar ao estoque.*\n\n`;
+  message += `⚠️ *Status atual:* Produto Indisponível\n`;
+  message += `📞 *Contato do cliente:* ${clientPhone}\n\n`;
+  message += `✅ Por favor, incluir este cliente na lista de interessados no produto e avisar quando houver reestoque.\n\n`;
+  message += `Mensagem enviada automaticamente pelo site NatuBrava.`;
+  
+  // Enviar via WhatsApp
+  window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
+  
+  // Fechar modal e mostrar confirmação
+  closeNotifyModal();
+  showNotification('✅ Seu interesse foi registrado! Entraremos em contato quando o produto estiver disponível.', 5000);
 }
 
 function openDeliveryModal() { 
@@ -1131,6 +1357,25 @@ function setupEventListeners() {
     }
   });
 
+  // ===== NOVOS EVENT LISTENERS PARA MODAL "AVISE-ME" =====
+  if (elements.closeNotifyModalButton) {
+    elements.closeNotifyModalButton.addEventListener('click', closeNotifyModal);
+  }
+  
+  if (elements.cancelNotifyButton) {
+    elements.cancelNotifyButton.addEventListener('click', closeNotifyModal);
+  }
+  
+  if (elements.confirmNotifyButton) {
+    elements.confirmNotifyButton.addEventListener('click', sendNotifyRequest);
+  }
+  
+  if (elements.notifyModalOverlay) {
+    elements.notifyModalOverlay.addEventListener('click', (e) => {
+      if (e.target === elements.notifyModalOverlay) closeNotifyModal();
+    });
+  }
+
   // Filtros de categoria
   elements.categoryFilters.addEventListener('click', e => {
     if (e.target.matches('.category-btn') || e.target.closest('.category-btn')) {
@@ -1148,6 +1393,14 @@ function setupEventListeners() {
     const productId = parseInt(card.dataset.id);
     const product = products.find(p => p.id === productId);
     if (!product) return;
+    
+    // Botão "Avise-me assim que chegar"
+    if (e.target.closest('.notify-me-btn')) {
+      e.preventDefault();
+      e.stopPropagation();
+      openNotifyModal(productId);
+      return;
+    }
     
     const qtySpan = card.querySelector('.product-quantity');
     const isGranel = product.isGranel;
@@ -1168,6 +1421,12 @@ function setupEventListeners() {
       
       if (isNaN(quantity) || quantity <= 0) {
         showNotification('Erro: quantidade inválida');
+        return;
+      }
+      
+      // Verificação adicional da quantidade mínima
+      if (isGranel && quantity < CONFIG.MIN_GRANEL_QUANTITY) {
+        showNotification(`Quantidade mínima: ${CONFIG.MIN_GRANEL_QUANTITY}g`);
         return;
       }
       
@@ -1258,6 +1517,7 @@ function setupEventListeners() {
       closeNameModal();
       closeDeliveryModal();
       closeClubInfoModal();
+      closeNotifyModal();
       closeMobileMenu();
     }
   });
