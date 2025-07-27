@@ -7,7 +7,9 @@ const CONFIG = {
     'https://corsproxy.io/?',
   ],
   CACHE_DURATION: 3 * 60 * 1000, // 3 minutos - permite atualizações diárias
-  CACHE_KEY: 'natuBrava_products_cache'
+  CACHE_KEY: 'natuBrava_products_cache',
+  ITEMS_PER_PAGE: 60, // Produtos por página
+  SCROLL_THRESHOLD: 300 // Quando mostrar botão voltar ao topo
 };
 
 // ===== FUNÇÕES DE CACHE OTIMIZADAS =====
@@ -108,10 +110,15 @@ async function fetchWithProxy(url) {
 
 // ===== ESTADO GLOBAL =====
 let products = [];
+let filteredProducts = [];
 let cart = [];
 let currentFilter = 'Todos';
+let currentPage = 1;
+let totalPages = 1;
 let isLoading = false;
 let searchTimeout;
+let priceRange = { min: 0, max: 99999 };
+let currentPriceFilter = { min: 0, max: 99999 };
 
 // ===== ELEMENTOS DOM (CACHE) =====
 const elements = {
@@ -154,6 +161,16 @@ const elements = {
   mobileMenu: document.getElementById('mobile-menu'),
   clubInfoButtonMobile: document.getElementById('club-info-button-mobile'),
   deliveryInfoButtonMobile: document.getElementById('delivery-info-button-mobile'),
+  // Novos elementos para melhorias
+  pagination: document.getElementById('pagination'),
+  productCounter: document.getElementById('product-counter'),
+  priceFilter: document.getElementById('price-filter'),
+  minPriceInput: document.getElementById('min-price'),
+  maxPriceInput: document.getElementById('max-price'),
+  applyPriceFilter: document.getElementById('apply-price-filter'),
+  clearFilters: document.getElementById('clear-filters'),
+  backToTop: document.getElementById('back-to-top'),
+  searchResults: document.getElementById('search-results'),
 };
 
 // ===== FUNÇÕES UTILITÁRIAS =====
@@ -329,8 +346,9 @@ async function loadProducts() {
   if (cachedProducts) {
     products = cachedProducts;
     validateCartWithProducts();
+    calculatePriceRange();
     renderCategoryFilters();
-    renderProducts();
+    applyFilters();
     showSuccess();
     isLoading = false;
     
@@ -390,11 +408,9 @@ async function loadProductsFromSheet(isBackground = false) {
       const isGranel = (item.CATEGORIA || '').toUpperCase() === 'GRANEL';
       const basePrice = parsePrice(item.PRECO);
       
-      // CORREÇÃO PRINCIPAL: Usar parseFloat para estoque em vez de parseInt
-      // Isso permite valores decimais como 0,900
+      // CORREÇÃO: Usar parseFloat para estoque em vez de parseInt
       let stockValue;
       if (item.ESTOQUE) {
-        // Substitui vírgula por ponto e converte para float
         stockValue = parseFloat(item.ESTOQUE.toString().replace(',', '.')) || 0;
       } else {
         stockValue = 0;
@@ -429,7 +445,7 @@ async function loadProductsFromSheet(isBackground = false) {
         name: item.NOME_SITE || 'Produto sem nome',
         price: isGranel ? basePrice / 1000 : basePrice,
         clubPrice: finalClubPrice,
-        stock: stockValue, // Agora aceita valores decimais
+        stock: stockValue,
         category: item.CATEGORIA || 'Outros',
         image: item.URL_FOTO || `https://placehold.co/300x200/166534/ffffff?text=${item.SKU}`,
         isGranel: isGranel,
@@ -449,8 +465,9 @@ async function loadProductsFromSheet(isBackground = false) {
     
     if (!isBackground) {
       validateCartWithProducts();
+      calculatePriceRange();
       renderCategoryFilters();
-      renderProducts();
+      applyFilters();
       showSuccess();
     } else {
       // Atualização em background - apenas valida carrinho
@@ -467,9 +484,41 @@ async function loadProductsFromSheet(isBackground = false) {
   }
 }
 
-// ===== RENDERIZAÇÃO DE CATEGORIAS (MODIFICADA PARA UNIR VIAAROMA) =====
+// ===== CALCULAR FAIXA DE PREÇOS =====
+function calculatePriceRange() {
+  if (products.length === 0) return;
+  
+  const prices = products.map(p => {
+    const price = p.clubPrice || p.price;
+    return p.isGranel ? price * 100 : price; // Preço base para granel é por 100g
+  });
+  
+  priceRange.min = Math.floor(Math.min(...prices));
+  priceRange.max = Math.ceil(Math.max(...prices));
+  
+  // Atualizar inputs de preço
+  if (elements.minPriceInput) {
+    elements.minPriceInput.placeholder = `Min: R$ ${priceRange.min}`;
+    elements.minPriceInput.min = priceRange.min;
+    elements.minPriceInput.max = priceRange.max;
+  }
+  
+  if (elements.maxPriceInput) {
+    elements.maxPriceInput.placeholder = `Max: R$ ${priceRange.max}`;
+    elements.maxPriceInput.min = priceRange.min;
+    elements.maxPriceInput.max = priceRange.max;
+  }
+}
+
+// ===== RENDERIZAÇÃO DE CATEGORIAS COM CONTADORES =====
 function renderCategoryFilters() {
   const clubProducts = products.filter(p => p.clubPrice !== null && p.clubPrice > 0);
+  
+  // Contar produtos por categoria
+  const categoryCount = {};
+  products.forEach(p => {
+    categoryCount[p.category] = (categoryCount[p.category] || 0) + 1;
+  });
   
   // Extrair categorias originais
   const originalCategories = [...new Set(products.map(p => p.category))];
@@ -477,6 +526,7 @@ function renderCategoryFilters() {
   // Filtrar e transformar categorias para exibição
   const displayCategories = [];
   let hasViaAromaCategories = false;
+  let viaAromaCount = 0;
   
   originalCategories.forEach(category => {
     if (category === 'OLEO ESSENCIAL' || category === 'ESSENCIAS') {
@@ -484,59 +534,77 @@ function renderCategoryFilters() {
         displayCategories.push('VIAAROMA');
         hasViaAromaCategories = true;
       }
+      viaAromaCount += categoryCount[category] || 0;
     } else {
       displayCategories.push(category);
     }
   });
   
-  let categories = ['Todos'];
+  let categories = [{ name: 'Todos', count: products.length }];
   
   if (clubProducts.length > 0) {
-    categories.push('⭐ Club NatuBrava');
+    categories.push({ name: '⭐ Club NatuBrava', count: clubProducts.length });
   }
   
-  categories.push(...displayCategories);
+  displayCategories.forEach(cat => {
+    if (cat === 'VIAAROMA') {
+      categories.push({ name: cat, count: viaAromaCount });
+    } else {
+      categories.push({ name: cat, count: categoryCount[cat] || 0 });
+    }
+  });
   
-  elements.categoryFilters.innerHTML = categories.map(category => {
+  elements.categoryFilters.innerHTML = categories.map(cat => {
     let buttonClass = 'category-btn text-sm sm:text-base px-4 py-2 rounded-full';
-    let buttonContent = category;
+    let buttonContent = cat.name;
     
-    if (category === '⭐ Club NatuBrava') {
+    if (cat.name === '⭐ Club NatuBrava') {
       buttonClass += ' club-category-btn';
-      buttonContent = `<span class="flex items-center"><ion-icon name="star" class="text-yellow-400 mr-1"></ion-icon>Club NatuBrava</span>`;
+      buttonContent = `<span class="flex items-center"><ion-icon name="star" class="text-yellow-400 mr-1"></ion-icon>Club NatuBrava <span class="ml-2 text-xs bg-white bg-opacity-30 px-2 py-0.5 rounded-full">${cat.count}</span></span>`;
+    } else {
+      buttonContent = `${cat.name} <span class="text-xs ml-1 bg-green-700 bg-opacity-20 px-2 py-0.5 rounded-full">${cat.count}</span>`;
     }
     
-    return `<button class="${buttonClass}" data-category="${category}">${buttonContent}</button>`;
+    return `<button class="${buttonClass}" data-category="${cat.name}">${buttonContent}</button>`;
   }).join('');
 }
 
-// ===== RENDERIZAÇÃO OTIMIZADA DE PRODUTOS (MODIFICADA PARA FILTRAR VIAAROMA) =====
-function renderProducts() {
-  const filterCategory = currentFilter;
+// ===== APLICAR FILTROS E BUSCA =====
+function applyFilters() {
   const searchTerm = normalizeText(elements.searchBox.value);
-
-  const filteredProducts = products.filter(product => {
+  const searchTerms = searchTerm.split(' ').filter(t => t.length > 0);
+  
+  filteredProducts = products.filter(product => {
+    // Filtro de categoria
     let inCategory = false;
-    
-    if (filterCategory === 'Todos') {
+    if (currentFilter === 'Todos') {
       inCategory = true;
-    } else if (filterCategory === '⭐ Club NatuBrava') {
+    } else if (currentFilter === '⭐ Club NatuBrava') {
       inCategory = product.clubPrice !== null && product.clubPrice > 0;
-    } else if (filterCategory === 'VIAAROMA') {
-      // Aqui é onde unimos as duas categorias
+    } else if (currentFilter === 'VIAAROMA') {
       inCategory = product.category === 'OLEO ESSENCIAL' || product.category === 'ESSENCIAS';
     } else {
-      inCategory = product.category === filterCategory;
+      inCategory = product.category === currentFilter;
     }
     
-    const inSearch = !searchTerm || normalizeText(product.name).includes(searchTerm);
-    return inCategory && inSearch;
+    // Filtro de busca (nome + SKU)
+    let matchesSearch = true;
+    if (searchTerms.length > 0) {
+      const productText = normalizeText(`${product.name} ${product.sku}`);
+      matchesSearch = searchTerms.every(term => productText.includes(term));
+    }
+    
+    // Filtro de preço
+    const productPrice = product.isGranel ? 
+      (product.clubPrice || product.price) * 100 : 
+      (product.clubPrice || product.price);
+    const inPriceRange = productPrice >= currentPriceFilter.min && productPrice <= currentPriceFilter.max;
+    
+    return inCategory && matchesSearch && inPriceRange;
   });
   
-  elements.productList.innerHTML = '';
-  elements.noProductsMessage.style.display = filteredProducts.length === 0 ? 'block' : 'none';
-  
-  if (filterCategory === '⭐ Club NatuBrava') {
+  // Ordenar produtos Club primeiro se estiver na categoria Club
+  if (currentFilter === '⭐ Club NatuBrava') {
     filteredProducts.sort((a, b) => {
       const aHasClub = a.clubPrice !== null && a.clubPrice > 0;
       const bHasClub = b.clubPrice !== null && b.clubPrice > 0;
@@ -546,17 +614,36 @@ function renderProducts() {
     });
   }
   
+  // Calcular páginas
+  totalPages = Math.ceil(filteredProducts.length / CONFIG.ITEMS_PER_PAGE);
+  currentPage = 1;
+  
+  // Renderizar
+  renderProducts();
+  renderPagination();
+  updateProductCounter();
+}
+
+// ===== RENDERIZAÇÃO DE PRODUTOS COM PAGINAÇÃO =====
+function renderProducts() {
+  // Calcular índices para paginação
+  const startIndex = (currentPage - 1) * CONFIG.ITEMS_PER_PAGE;
+  const endIndex = startIndex + CONFIG.ITEMS_PER_PAGE;
+  const pageProducts = filteredProducts.slice(startIndex, endIndex);
+  
+  elements.productList.innerHTML = '';
+  elements.noProductsMessage.style.display = pageProducts.length === 0 ? 'block' : 'none';
+  
   // Use DocumentFragment para melhor performance
   const fragment = document.createDocumentFragment();
   
-  filteredProducts.forEach(product => {
+  pageProducts.forEach(product => {
     const card = document.createElement('div');
     card.className = 'product-card bg-white rounded-lg shadow-md overflow-hidden';
     card.style.animation = 'fadeInUp 0.5s ease-out';
     card.dataset.id = product.id;
     
     const isGranel = product.isGranel;
-    // ALTERAÇÃO: Produtos granel agora iniciam com 100g
     const initialQty = isGranel ? 100 : 1;
     const hasClubPrice = product.clubPrice !== null && product.clubPrice > 0;
     
@@ -579,7 +666,14 @@ function renderProducts() {
       priceHTML = `<span class="text-lg font-bold text-green-700">R$ ${formatPrice(isGranel ? product.price * 100 : product.price)}${isGranel ? '/100g' : ''}</span>`;
     }
     
-    // Lazy loading sem modificar URL do Cloudinary
+    // Destacar termos de busca no nome
+    let displayName = product.name;
+    const searchTerm = elements.searchBox.value.trim();
+    if (searchTerm) {
+      const regex = new RegExp(`(${searchTerm.split(' ').join('|')})`, 'gi');
+      displayName = displayName.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
+    }
+    
     const imageHTML = `
       <img data-src="${product.image}" 
            alt="${product.name}" 
@@ -593,7 +687,7 @@ function renderProducts() {
         ${imageHTML}
       </div>
       <div class="product-card-content">
-        <h3 class="text-lg font-semibold text-green-800 mb-1">${product.name}</h3>
+        <h3 class="text-lg font-semibold text-green-800 mb-1">${displayName}</h3>
         <p class="text-sm text-gray-600 mb-2 flex-grow">Cód.: ${product.sku}</p>
         <div class="product-card-footer">
           <div class="flex justify-between items-center mb-3">
@@ -619,16 +713,118 @@ function renderProducts() {
   
   // Atualizar botões de categoria
   document.querySelectorAll('#category-filters .category-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.category === filterCategory);
+    btn.classList.toggle('active', btn.dataset.category === currentFilter);
   });
+  
+  // Scroll para o topo suavemente
+  if (currentPage > 1) {
+    elements.produtosSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// ===== RENDERIZAR PAGINAÇÃO =====
+function renderPagination() {
+  if (!elements.pagination || totalPages <= 1) {
+    if (elements.pagination) elements.pagination.style.display = 'none';
+    return;
+  }
+  
+  elements.pagination.style.display = 'flex';
+  elements.pagination.innerHTML = '';
+  
+  // Botão anterior
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'pagination-btn';
+  prevBtn.innerHTML = '<ion-icon name="chevron-back-outline"></ion-icon>';
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.onclick = () => goToPage(currentPage - 1);
+  elements.pagination.appendChild(prevBtn);
+  
+  // Páginas
+  const maxVisiblePages = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+  
+  if (endPage - startPage < maxVisiblePages - 1) {
+    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+  }
+  
+  // Primeira página se não estiver visível
+  if (startPage > 1) {
+    const firstPageBtn = createPageButton(1);
+    elements.pagination.appendChild(firstPageBtn);
+    
+    if (startPage > 2) {
+      const dots = document.createElement('span');
+      dots.className = 'pagination-dots';
+      dots.textContent = '...';
+      elements.pagination.appendChild(dots);
+    }
+  }
+  
+  // Páginas visíveis
+  for (let i = startPage; i <= endPage; i++) {
+    const pageBtn = createPageButton(i);
+    elements.pagination.appendChild(pageBtn);
+  }
+  
+  // Última página se não estiver visível
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      const dots = document.createElement('span');
+      dots.className = 'pagination-dots';
+      dots.textContent = '...';
+      elements.pagination.appendChild(dots);
+    }
+    
+    const lastPageBtn = createPageButton(totalPages);
+    elements.pagination.appendChild(lastPageBtn);
+  }
+  
+  // Botão próximo
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'pagination-btn';
+  nextBtn.innerHTML = '<ion-icon name="chevron-forward-outline"></ion-icon>';
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.onclick = () => goToPage(currentPage + 1);
+  elements.pagination.appendChild(nextBtn);
+}
+
+function createPageButton(pageNumber) {
+  const btn = document.createElement('button');
+  btn.className = 'pagination-btn' + (pageNumber === currentPage ? ' active' : '');
+  btn.textContent = pageNumber;
+  btn.onclick = () => goToPage(pageNumber);
+  return btn;
+}
+
+function goToPage(page) {
+  if (page < 1 || page > totalPages) return;
+  currentPage = page;
+  renderProducts();
+  renderPagination();
+}
+
+// ===== ATUALIZAR CONTADOR DE PRODUTOS =====
+function updateProductCounter() {
+  if (!elements.productCounter) return;
+  
+  const total = filteredProducts.length;
+  const start = total > 0 ? (currentPage - 1) * CONFIG.ITEMS_PER_PAGE + 1 : 0;
+  const end = Math.min(currentPage * CONFIG.ITEMS_PER_PAGE, total);
+  
+  elements.productCounter.innerHTML = `
+    Mostrando <strong>${start}-${end}</strong> de <strong>${total}</strong> produtos
+    ${currentPriceFilter.min > 0 || currentPriceFilter.max < 99999 ? '<span class="text-green-600 ml-2">(Filtro de preço ativo)</span>' : ''}
+  `;
 }
 
 // ===== BUSCA OTIMIZADA COM DEBOUNCE =====
 function handleSearch() {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
-    renderProducts();
-  }, 300); // Debounce de 300ms
+    applyFilters();
+  }, 300);
 }
 
 // ===== CARRINHO & MODAIS (MANTIDOS INTACTOS) =====
@@ -854,6 +1050,21 @@ function showNotification(message, duration = 3000) {
   setTimeout(() => notification.remove(), duration);
 }
 
+// ===== SCROLL TO TOP =====
+function handleScroll() {
+  if (elements.backToTop) {
+    if (window.pageYOffset > CONFIG.SCROLL_THRESHOLD) {
+      elements.backToTop.classList.add('show');
+    } else {
+      elements.backToTop.classList.remove('show');
+    }
+  }
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 // ===== EVENT LISTENERS OTIMIZADOS =====
 function setupEventListeners() {
   // Carrinho
@@ -877,6 +1088,45 @@ function setupEventListeners() {
   
   // Busca com debounce
   elements.searchBox.addEventListener('input', handleSearch);
+  
+  // Filtro de preço
+  if (elements.applyPriceFilter) {
+    elements.applyPriceFilter.addEventListener('click', () => {
+      const minVal = parseFloat(elements.minPriceInput.value) || priceRange.min;
+      const maxVal = parseFloat(elements.maxPriceInput.value) || priceRange.max;
+      
+      if (minVal <= maxVal) {
+        currentPriceFilter.min = minVal;
+        currentPriceFilter.max = maxVal;
+        applyFilters();
+        showNotification('Filtro de preço aplicado!');
+      } else {
+        showNotification('Preço mínimo deve ser menor que o máximo!');
+      }
+    });
+  }
+  
+  // Limpar filtros
+  if (elements.clearFilters) {
+    elements.clearFilters.addEventListener('click', () => {
+      currentPriceFilter.min = priceRange.min;
+      currentPriceFilter.max = priceRange.max;
+      elements.minPriceInput.value = '';
+      elements.maxPriceInput.value = '';
+      elements.searchBox.value = '';
+      currentFilter = 'Todos';
+      applyFilters();
+      showNotification('Filtros limpos!');
+    });
+  }
+  
+  // Scroll to top
+  if (elements.backToTop) {
+    elements.backToTop.addEventListener('click', scrollToTop);
+  }
+  
+  // Monitorar scroll
+  window.addEventListener('scroll', handleScroll);
   
   // Modais de informação
   if (elements.deliveryInfoButton) {
@@ -952,7 +1202,7 @@ function setupEventListeners() {
     if (e.target.matches('.category-btn') || e.target.closest('.category-btn')) {
       const button = e.target.closest('.category-btn') || e.target;
       currentFilter = button.dataset.category;
-      renderProducts();
+      applyFilters();
     }
   });
 
@@ -1060,7 +1310,6 @@ function setupEventListeners() {
         message += `\n*Observações:* ${observation}\n`;
     }
 
-    // ALTERAÇÃO: Nova mensagem de confirmação de estoque e valores
     message += `\n📋 *Este pedido é para confirmação de estoque e valores.*\nEstou ciente de que os preços apresentados no catálogo online são informativos e podem sofrer alterações.\n\n✅ Aguardo confirmação de disponibilidade e valores atualizados.\n\nObrigado!`;
     
     window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
