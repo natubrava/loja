@@ -6,10 +6,11 @@ const CONFIG = {
     'https://api.allorigins.win/raw?url=',
     'https://corsproxy.io/?',
   ],
-  CACHE_DURATION: 3 * 60 * 1000, // 3 minutos - permite atualizações diárias
+  CACHE_DURATION: 3 * 60 * 1000, // 3 minutos
   CACHE_KEY: 'natuBrava_products_cache',
-  ITEMS_PER_PAGE: 60, // Produtos por página
-  SCROLL_THRESHOLD: 300, // Quando mostrar botão voltar ao topo
+  ITEMS_PER_PAGE: 60,
+  SCROLL_THRESHOLD: 300,
+  LOW_STOCK_THRESHOLD: 100, // Gramas - estoque baixo para granel
   MIN_GRANEL_QUANTITY: 50 // Quantidade mínima para granel
 };
 
@@ -19,7 +20,6 @@ function getCachedProducts() {
     const cached = localStorage.getItem(CONFIG.CACHE_KEY);
     if (cached) {
       const data = JSON.parse(cached);
-      // Cache válido por apenas 3 minutos para não afetar atualizações diárias
       if (Date.now() - data.timestamp < CONFIG.CACHE_DURATION) {
         return data.products;
       }
@@ -164,7 +164,6 @@ const elements = {
   productCounter: document.getElementById('product-counter'),
   backToTop: document.getElementById('back-to-top'),
   searchResults: document.getElementById('search-results'),
-  // Novos elementos para o modal "Avise-me"
   notifyModalOverlay: document.getElementById('notify-modal-overlay'),
   notifyModal: document.getElementById('notify-modal'),
   clientNotifyName: document.getElementById('client-notify-name'),
@@ -234,16 +233,19 @@ function parseCSV(csvText) {
   }).filter(item => item.SKU && item.NOME_SITE);
 }
 
-// ===== NOVA FUNÇÃO PARA DETERMINAR STATUS DO PRODUTO =====
+// ===== FUNÇÃO PARA DETERMINAR STATUS DO PRODUTO (CORRIGIDA) =====
 function getProductStatus(product) {
   if (!product.isGranel) {
-    // Produto unitário - simples: tem estoque ou não tem
+    // Produto unitário - permite compra com qualquer quantidade > 0
     if (product.stock <= 0) return 'out_of_stock';
+    if (product.stock === 1) return 'low_stock'; // Última unidade
     return 'available';
   } else {
-    // Produto a granel - indisponível se não dá para vender pelo menos 50g
+    // Produto a granel
     const stockInGrams = product.stock * 1000;
-    if (stockInGrams <= 0 || stockInGrams < CONFIG.MIN_GRANEL_QUANTITY) return 'out_of_stock';
+    if (stockInGrams <= 0) return 'out_of_stock';
+    if (stockInGrams < CONFIG.MIN_GRANEL_QUANTITY) return 'out_of_stock'; // Não permite venda abaixo de 50g
+    if (stockInGrams < CONFIG.LOW_STOCK_THRESHOLD) return 'low_stock'; // Entre 50-99g = estoque baixo
     return 'available';
   }
 }
@@ -286,7 +288,7 @@ function loadInitialCart() {
   }
 }
 
-// ===== VALIDAÇÃO RIGOROSA DO CARRINHO (MANTIDA INTACTA) =====
+// ===== VALIDAÇÃO DO CARRINHO =====
 function validateCartWithProducts() {
   if (cart.length === 0) return;
   
@@ -308,7 +310,7 @@ function validateCartWithProducts() {
       continue;
     }
     
-    // Verificar se produto está disponível para venda
+    // Verificar se produto está disponível
     const status = getProductStatus(currentProduct);
     if (status === 'out_of_stock') {
       hasChanges = true;
@@ -359,7 +361,6 @@ async function loadProducts() {
   if (isLoading) return;
   isLoading = true;
   
-  // Primeiro, tenta carregar do cache
   const cachedProducts = getCachedProducts();
   if (cachedProducts) {
     products = cachedProducts;
@@ -369,12 +370,10 @@ async function loadProducts() {
     showSuccess();
     isLoading = false;
     
-    // Carrega em background para atualizar o cache
     loadProductsFromSheet(true);
     return;
   }
   
-  // Se não há cache, carrega da planilha
   await loadProductsFromSheet(false);
 }
 
@@ -386,7 +385,6 @@ async function loadProductsFromSheet(isBackground = false) {
   try {
     let response;
     
-    // Tenta acesso direto primeiro
     try {
       response = await fetch(CONFIG.SHEET_CSV_URL, {
         headers: {
@@ -410,7 +408,6 @@ async function loadProductsFromSheet(isBackground = false) {
     
     const rawData = parseCSV(csvText);
     
-    // Buscar possíveis variações da coluna club
     const lines = csvText.trim().split('\n');
     const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
     const possibleClubColumns = headers.filter(h => 
@@ -432,7 +429,6 @@ async function loadProductsFromSheet(isBackground = false) {
         stockValue = 0;
       }
       
-      // Buscar preço club em diferentes possíveis colunas
       let clubPrice = 0;
       
       if (item.CLUB_VLR) {
@@ -467,7 +463,6 @@ async function loadProductsFromSheet(isBackground = false) {
         quantityStep: isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1,
       };
       
-      // Adicionar status do produto
       product.status = getProductStatus(product);
       
       return product;
@@ -478,8 +473,6 @@ async function loadProductsFromSheet(isBackground = false) {
     }
     
     products = newProducts;
-    
-    // Salva no cache
     setCachedProducts(products);
     
     if (!isBackground) {
@@ -488,7 +481,6 @@ async function loadProductsFromSheet(isBackground = false) {
       applyFilters();
       showSuccess();
     } else {
-      // Atualização em background - apenas valida carrinho
       validateCartWithProducts();
     }
     
@@ -502,21 +494,19 @@ async function loadProductsFromSheet(isBackground = false) {
   }
 }
 
-// ===== RENDERIZAÇÃO DE CATEGORIAS COM CONTADORES =====
+// ===== RENDERIZAÇÃO DE CATEGORIAS (SIMPLIFICADA) =====
 function renderCategoryFilters() {
   const clubProducts = products.filter(p => p.clubPrice !== null && p.clubPrice > 0);
   const outOfStockProducts = products.filter(p => p.status === 'out_of_stock');
   
-  // Contar produtos por categoria (incluindo fora de estoque)
+  // Contar produtos por categoria
   const categoryCount = {};
   products.forEach(p => {
     categoryCount[p.category] = (categoryCount[p.category] || 0) + 1;
   });
   
-  // Extrair categorias originais
   const originalCategories = [...new Set(products.map(p => p.category))];
   
-  // Filtrar e transformar categorias para exibição
   const displayCategories = [];
   let hasViaAromaCategories = false;
   let viaAromaCount = 0;
@@ -584,44 +574,39 @@ function renderCategoryFilters() {
   }).join('');
 }
 
-// ===== APLICAR FILTROS E BUSCA =====
+// ===== APLICAR FILTROS E BUSCA (BUSCA GLOBAL) =====
 function applyFilters() {
   const searchTerm = normalizeText(elements.searchBox.value);
   const searchTerms = searchTerm.split(' ').filter(t => t.length > 0);
   
   filteredProducts = products.filter(product => {
-    // Se há busca, SEMPRE buscar em todos os produtos (ignorar categoria)
+    // Se há busca, ignorar filtro de categoria e buscar globalmente
     if (searchTerms.length > 0) {
       const productText = normalizeText(`${product.name} ${product.sku}`);
       return searchTerms.every(term => productText.includes(term));
     }
     
     // Se não há busca, aplicar filtro de categoria
-    let inCategory = false;
     if (currentFilter === 'Todos') {
-      inCategory = true;
+      return true;
     } else if (currentFilter === '⭐ Club NatuBrava') {
-      inCategory = product.clubPrice !== null && product.clubPrice > 0;
+      return product.clubPrice !== null && product.clubPrice > 0;
     } else if (currentFilter === 'VIAAROMA') {
-      inCategory = product.category === 'OLEO ESSENCIAL' || product.category === 'ESSENCIAS';
+      return product.category === 'OLEO ESSENCIAL' || product.category === 'ESSENCIAS';
     } else if (currentFilter === '❌ Fora de Estoque') {
-      inCategory = product.status === 'out_of_stock';
+      return product.status === 'out_of_stock';
     } else {
-      inCategory = product.category === currentFilter;
+      return product.category === currentFilter;
     }
-    
-    return inCategory;
   });
   
-  // Ordenar produtos: disponíveis primeiro, depois club, depois fora de estoque
+  // Ordenar produtos
   filteredProducts.sort((a, b) => {
-    // Primeiro critério: status (disponível > fora de estoque)
+    const statusOrder = { 'available': 0, 'low_stock': 1, 'out_of_stock': 2 };
     if (a.status !== b.status) {
-      const statusOrder = { 'available': 0, 'out_of_stock': 1 };
       return statusOrder[a.status] - statusOrder[b.status];
     }
     
-    // Segundo critério: produtos club primeiro (se ambos estão disponíveis)
     if (a.status === 'available' && b.status === 'available') {
       const aHasClub = a.clubPrice !== null && a.clubPrice > 0;
       const bHasClub = b.clubPrice !== null && b.clubPrice > 0;
@@ -632,19 +617,16 @@ function applyFilters() {
     return 0;
   });
   
-  // Calcular páginas
   totalPages = Math.ceil(filteredProducts.length / CONFIG.ITEMS_PER_PAGE);
   currentPage = 1;
   
-  // Renderizar
   renderProducts();
   renderPagination();
   updateProductCounter();
 }
 
-// ===== RENDERIZAÇÃO DE PRODUTOS COM PAGINAÇÃO =====
+// ===== RENDERIZAÇÃO DE PRODUTOS =====
 function renderProducts() {
-  // Calcular índices para paginação
   const startIndex = (currentPage - 1) * CONFIG.ITEMS_PER_PAGE;
   const endIndex = startIndex + CONFIG.ITEMS_PER_PAGE;
   const pageProducts = filteredProducts.slice(startIndex, endIndex);
@@ -652,20 +634,20 @@ function renderProducts() {
   elements.productList.innerHTML = '';
   elements.noProductsMessage.style.display = pageProducts.length === 0 ? 'block' : 'none';
   
-  // Use DocumentFragment para melhor performance
   const fragment = document.createDocumentFragment();
   
   pageProducts.forEach(product => {
     const card = document.createElement('div');
     const isGranel = product.isGranel;
-    const initialQty = isGranel ? 100 : 1; // VOLTA PARA 100g inicial
+    const initialQty = isGranel ? 100 : 1; // Quantidade inicial: 100g para granel, 1 para unitário
     const hasClubPrice = product.clubPrice !== null && product.clubPrice > 0;
     const status = product.status;
     
-    // Definir classes do card baseado no status
     let cardClass = 'product-card bg-white rounded-lg shadow-md overflow-hidden';
     if (status === 'out_of_stock') {
       cardClass += ' out-of-stock-card';
+    } else if (status === 'low_stock') {
+      cardClass += ' low-stock-card';
     }
     if (hasClubPrice && status !== 'out_of_stock') {
       cardClass += ' club-product-card';
@@ -675,15 +657,16 @@ function renderProducts() {
     card.style.animation = 'fadeInUp 0.5s ease-out';
     card.dataset.id = product.id;
     
-    // Determinar preços e labels
     let priceHTML = '';
     let statusBadgeHTML = '';
     let quantityControlsHTML = '';
     let buttonHTML = '';
     
-    // Badge de status (apenas para fora de estoque)
+    // Badge de status
     if (status === 'out_of_stock') {
       statusBadgeHTML = '<div class="status-badge out-of-stock-badge">Produto Indisponível</div>';
+    } else if (status === 'low_stock') {
+      statusBadgeHTML = '<div class="status-badge low-stock-badge">Últimas Unidades</div>';
     }
     
     // Preços
@@ -714,11 +697,15 @@ function renderProducts() {
           <span>Avise-me assim que chegar</span>
         </button>`;
     } else {
+      // Quantidade mínima para controles (50g para granel, 1 para unitário)
+      const minQty = isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1;
+      const maxQty = isGranel ? product.stock * 1000 : product.stock;
+      
       quantityControlsHTML = `
         <div class="flex items-center space-x-1">
-          <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="-1" ${isGranel && initialQty <= CONFIG.MIN_GRANEL_QUANTITY ? 'disabled' : ''}><ion-icon name="remove-outline" class="pointer-events-none"></ion-icon></button>
+          <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="-1" ${initialQty <= minQty ? 'disabled' : ''}><ion-icon name="remove-outline" class="pointer-events-none"></ion-icon></button>
           <span class="product-quantity font-medium text-base ${isGranel ? 'w-16' : 'w-6'} text-center">${isGranel ? `${initialQty}g` : initialQty}</span>
-          <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="1"><ion-icon name="add-outline" class="pointer-events-none"></ion-icon></button>
+          <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="1" ${initialQty >= maxQty ? 'disabled' : ''}><ion-icon name="add-outline" class="pointer-events-none"></ion-icon></button>
         </div>`;
       
       buttonHTML = `
@@ -766,16 +753,12 @@ function renderProducts() {
   });
   
   elements.productList.appendChild(fragment);
-  
-  // Configurar lazy loading para as novas imagens
   setupLazyLoading();
   
-  // Atualizar botões de categoria
   document.querySelectorAll('#category-filters .category-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.category === currentFilter);
   });
   
-  // Scroll para o topo suavemente
   if (currentPage > 1) {
     elements.produtosSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -791,7 +774,6 @@ function renderPagination() {
   elements.pagination.style.display = 'flex';
   elements.pagination.innerHTML = '';
   
-  // Botão anterior
   const prevBtn = document.createElement('button');
   prevBtn.className = 'pagination-btn';
   prevBtn.innerHTML = '<ion-icon name="chevron-back-outline"></ion-icon>';
@@ -799,7 +781,6 @@ function renderPagination() {
   prevBtn.onclick = () => goToPage(currentPage - 1);
   elements.pagination.appendChild(prevBtn);
   
-  // Páginas
   const maxVisiblePages = 5;
   let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
   let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
@@ -808,7 +789,6 @@ function renderPagination() {
     startPage = Math.max(1, endPage - maxVisiblePages + 1);
   }
   
-  // Primeira página se não estiver visível
   if (startPage > 1) {
     const firstPageBtn = createPageButton(1);
     elements.pagination.appendChild(firstPageBtn);
@@ -821,13 +801,11 @@ function renderPagination() {
     }
   }
   
-  // Páginas visíveis
   for (let i = startPage; i <= endPage; i++) {
     const pageBtn = createPageButton(i);
     elements.pagination.appendChild(pageBtn);
   }
   
-  // Última página se não estiver visível
   if (endPage < totalPages) {
     if (endPage < totalPages - 1) {
       const dots = document.createElement('span');
@@ -840,7 +818,6 @@ function renderPagination() {
     elements.pagination.appendChild(lastPageBtn);
   }
   
-  // Botão próximo
   const nextBtn = document.createElement('button');
   nextBtn.className = 'pagination-btn';
   nextBtn.innerHTML = '<ion-icon name="chevron-forward-outline"></ion-icon>';
@@ -885,7 +862,7 @@ function handleSearch() {
   }, 300);
 }
 
-// ===== CARRINHO & MODAIS (MANTIDOS INTACTOS) =====
+// ===== CARRINHO =====
 function triggerCartAnimation() {
   if (elements.cartButton) {
     elements.cartButton.classList.add('cart-bounce-animation');
@@ -897,19 +874,25 @@ function triggerCartAnimation() {
   }
 }
 
+// ===== ADICIONAR AO CARRINHO (CORRIGIDO) =====
 function addToCart(productId, quantity) {
   const product = products.find(p => p.id === productId);
   if (!product) return;
 
-  // Verificar se produto está disponível
+  // Verificar se produto está disponível (corrigido para permitir low_stock)
   if (product.status === 'out_of_stock') {
     showNotification('Este produto não está disponível para compra no momento.');
     return;
   }
 
-  // Verificação rigorosa da quantidade mínima para granel
+  // Verificação de quantidade mínima
   if (product.isGranel && quantity < CONFIG.MIN_GRANEL_QUANTITY) {
     showNotification(`Quantidade mínima para produtos a granel: ${CONFIG.MIN_GRANEL_QUANTITY}g`);
+    return;
+  }
+  
+  if (!product.isGranel && quantity < 1) {
+    showNotification('Quantidade mínima: 1 unidade');
     return;
   }
 
@@ -1019,7 +1002,7 @@ function renderCart() {
   elements.checkoutButton.disabled = cart.length === 0;
 }
 
-// ===== MODAIS (MANTIDOS E EXPANDIDOS) =====
+// ===== MODAIS =====
 function openCartPanel() { 
   elements.cartPanel.classList.add('open'); 
   elements.cartOverlay.classList.add('open'); 
@@ -1056,12 +1039,10 @@ function closeNameModal() {
   elements.clientObservation.value = '';
 }
 
-// ===== NOVO MODAL "AVISE-ME" =====
 function openNotifyModal(productId) {
   const product = products.find(p => p.id === productId);
   if (!product) return;
   
-  // Definir dados do produto no modal
   document.getElementById('notify-product-name').textContent = product.name;
   document.getElementById('notify-product-sku').textContent = product.sku;
   
@@ -1073,7 +1054,6 @@ function openNotifyModal(productId) {
     elements.notifyModal.style.opacity = '1';
   }, 50);
   
-  // Armazenar ID do produto no modal
   elements.notifyModal.dataset.productId = productId;
 }
 
@@ -1086,7 +1066,6 @@ function closeNotifyModal() {
     document.body.style.overflow = '';
   }, 300);
   
-  // Limpar formulário
   elements.notifyError.classList.add('hidden');
   elements.clientNotifyName.classList.remove('border-red-500');
   elements.clientNotifyPhone.classList.remove('border-red-500');
@@ -1105,7 +1084,6 @@ function sendNotifyRequest() {
   const clientPhone = elements.clientNotifyPhone.value.trim();
   const observation = elements.clientNotifyObservation.value.trim();
   
-  // Validação
   let hasError = false;
   if (!clientName) {
     elements.clientNotifyName.classList.add('border-red-500');
@@ -1128,7 +1106,6 @@ function sendNotifyRequest() {
   
   elements.notifyError.classList.add('hidden');
   
-  // Montar mensagem
   let message = `🔔 *AVISO DE INTERESSE EM PRODUTO*\n\n`;
   message += `*Cliente:* ${clientName}\n`;
   message += `*Telefone:* ${clientPhone}\n\n`;
@@ -1147,10 +1124,8 @@ function sendNotifyRequest() {
   message += `✅ Por favor, incluir este cliente na lista de interessados no produto e avisar quando houver reestoque.\n\n`;
   message += `Mensagem enviada automaticamente pelo site NatuBrava.`;
   
-  // Enviar via WhatsApp
   window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
   
-  // Fechar modal e mostrar confirmação
   closeNotifyModal();
   showNotification('✅ Seu interesse foi registrado! Entraremos em contato quando o produto estiver disponível.', 5000);
 }
@@ -1234,9 +1209,8 @@ function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ===== EVENT LISTENERS OTIMIZADOS =====
+// ===== EVENT LISTENERS =====
 function setupEventListeners() {
-  // Carrinho
   if (elements.cartButton) {
     elements.cartButton.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1254,19 +1228,14 @@ function setupEventListeners() {
   elements.closeCartButton.addEventListener('click', closeCartPanel);
   elements.cartOverlay.addEventListener('click', closeCartPanel);
   elements.retryButton.addEventListener('click', loadProducts);
-  
-  // Busca com debounce
   elements.searchBox.addEventListener('input', handleSearch);
   
-  // Scroll to top
   if (elements.backToTop) {
     elements.backToTop.addEventListener('click', scrollToTop);
   }
   
-  // Monitorar scroll
   window.addEventListener('scroll', handleScroll);
   
-  // Modais de informação
   if (elements.deliveryInfoButton) {
     elements.deliveryInfoButton.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1321,7 +1290,6 @@ function setupEventListeners() {
     });
   }
 
-  // Menu mobile
   if (elements.mobileMenuButton) {
     elements.mobileMenuButton.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1335,7 +1303,6 @@ function setupEventListeners() {
     }
   });
 
-  // ===== NOVOS EVENT LISTENERS PARA MODAL "AVISE-ME" =====
   if (elements.closeNotifyModalButton) {
     elements.closeNotifyModalButton.addEventListener('click', closeNotifyModal);
   }
@@ -1354,7 +1321,6 @@ function setupEventListeners() {
     });
   }
 
-  // Filtros de categoria
   elements.categoryFilters.addEventListener('click', e => {
     if (e.target.matches('.category-btn') || e.target.closest('.category-btn')) {
       const button = e.target.closest('.category-btn') || e.target;
@@ -1363,7 +1329,7 @@ function setupEventListeners() {
     }
   });
 
-  // Produtos (delegação de eventos)
+  // ===== EVENT LISTENER PARA PRODUTOS (CORRIGIDO) =====
   elements.productList.addEventListener('click', e => {
     const card = e.target.closest('.product-card');
     if (!card) return;
@@ -1372,7 +1338,6 @@ function setupEventListeners() {
     const product = products.find(p => p.id === productId);
     if (!product) return;
     
-    // Botão "Avise-me assim que chegar"
     if (e.target.closest('.notify-me-btn')) {
       e.preventDefault();
       e.stopPropagation();
@@ -1402,46 +1367,62 @@ function setupEventListeners() {
         return;
       }
       
-      // Verificação adicional da quantidade mínima
-      if (isGranel && quantity < CONFIG.MIN_GRANEL_QUANTITY) {
-        showNotification(`Quantidade mínima: ${CONFIG.MIN_GRANEL_QUANTITY}g`);
-        return;
-      }
-      
       addToCart(productId, quantity);
     } 
     else if (e.target.closest('.product-quantity-change')) {
       e.preventDefault();
       e.stopPropagation();
       
-      const change = parseInt(e.target.closest('[data-change]').dataset.change);
+      const changeBtn = e.target.closest('[data-change]');
+      const change = parseInt(changeBtn.dataset.change);
       let currentQty = parseInt(qtySpan.textContent.replace('g', ''));
-      let newQty = currentQty + (isGranel ? change * product.quantityStep : change);
-      const min = isGranel ? product.minQuantity : 1;
-      const max = isGranel ? product.stock * 1000 : product.stock;
-
-      if (newQty >= min && newQty <= max) {
-        qtySpan.textContent = isGranel ? `${newQty}g` : newQty;
-        if (isGranel) {
-          const priceToUse = hasClubPrice ? product.clubPrice : product.price;
-          const totalPriceElement = card.querySelector('.product-total-price');
-          if (totalPriceElement) {
-            totalPriceElement.textContent = formatPrice(priceToUse * newQty);
-          }
-        }
+      
+      // Calcular nova quantidade
+      let newQty;
+      if (isGranel) {
+        newQty = currentQty + (change * CONFIG.MIN_GRANEL_QUANTITY);
+      } else {
+        newQty = currentQty + change;
       }
       
-      // Atualizar estado dos botões sempre (mesmo se não mudou a quantidade)
-      const decreaseBtn = card.querySelector('[data-change="-1"]');
-      const increaseBtn = card.querySelector('[data-change="1"]');
-      const currentQuantity = parseInt(qtySpan.textContent.replace('g', ''));
-      
-      if (decreaseBtn) decreaseBtn.disabled = currentQuantity <= min;
-      if (increaseBtn) increaseBtn.disabled = currentQuantity >= max;
+      // Definir limites
+      const minQty = isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1;
+      const maxQty = isGranel ? product.stock * 1000 : product.stock;
+
+      // Verificar se a nova quantidade está dentro dos limites
+      if (newQty >= minQty && newQty <= maxQty) {
+        qtySpan.textContent = isGranel ? `${newQty}g` : newQty;
+        
+        // Atualizar total para produtos a granel
+        if (isGranel) {
+          const priceToUse = hasClubPrice ? product.clubPrice : product.price;
+          const totalPriceSpan = card.querySelector('.product-total-price');
+          if (totalPriceSpan) {
+            totalPriceSpan.textContent = formatPrice(priceToUse * newQty);
+          }
+        }
+        
+        // Atualizar estado dos botões
+        const decreaseBtn = card.querySelector('[data-change="-1"]');
+        const increaseBtn = card.querySelector('[data-change="1"]');
+        
+        if (decreaseBtn) {
+          decreaseBtn.disabled = newQty <= minQty;
+        }
+        if (increaseBtn) {
+          increaseBtn.disabled = newQty >= maxQty;
+        }
+      } else {
+        // Quantidade fora dos limites - mostrar notificação
+        if (newQty < minQty) {
+          showNotification(`Quantidade mínima: ${minQty}${isGranel ? 'g' : ''}`);
+        } else if (newQty > maxQty) {
+          showNotification(`Estoque máximo: ${maxQty}${isGranel ? 'g' : ''}`);
+        }
+      }
     }
   });
 
-  // Carrinho (delegação de eventos)
   elements.cartItems.addEventListener('click', e => {
     const removeButton = e.target.closest('.remove-item');
     if (removeButton) {
@@ -1455,7 +1436,6 @@ function setupEventListeners() {
     }
   });
 
-  // Checkout
   elements.checkoutButton.addEventListener('click', () => {
     if (cart.length > 0) openNameModal();
   });
@@ -1497,7 +1477,6 @@ function setupEventListeners() {
     closeNameModal();
   });
   
-  // Teclas de atalho
   document.addEventListener('keydown', (e) => {
     if(e.key === 'Escape') {
       closeCartPanel();
