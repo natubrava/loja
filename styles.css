@@ -164,25 +164,6 @@ body {
   color: #9ca3af;
 }
 
-/* ===== ESTILOS PARA FILTRO DE PREÇO (NOVO) ===== */
-#price-filter {
-  background-color: white;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1.5rem;
-}
-
-#price-filter input[type="number"] {
-  -moz-appearance: textfield;
-}
-
-#price-filter input[type="number"]::-webkit-outer-spin-button,
-#price-filter input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
 /* ===== ESTILOS PARA CONTADOR DE PRODUTOS (NOVO) ===== */
 #product-counter {
   font-size: 0.875rem;
@@ -258,10 +239,6 @@ mark {
 
 /* ===== ESTILOS RESPONSIVOS PARA NOVOS ELEMENTOS ===== */
 @media (max-width: 640px) {
-  #price-filter {
-    padding: 0.75rem;
-  }
-  
   .pagination-btn {
     min-width: 36px;
     height: 36px;
@@ -422,24 +399,25 @@ html {
   flex-shrink: 0;
 }
 
-/* Botão de categoria ativo e hover com melhor contraste */
+/* ===== ESTILOS DOS BOTÕES DE CATEGORIA (AJUSTADO) ===== */
 .category-btn {
   transition: all 0.2s ease;
-  border: 2px solid #166534;
+  border: 2px solid #166534; /* Estilo padrão "vazado" */
   color: #166534;
+  background-color: #ffffff; /* Fundo branco */
 }
 .category-btn:hover {
-  background-color: #166534;
+  background-color: #166534; /* Fica sólido ao passar o mouse */
   color: white;
   transform: translateY(-1px);
 }
 .category-btn.active {
-  background-color: #16a34a;
+  background-color: #16a34a; /* Cor sólida quando ativo */
   border-color: #16a34a;
   color: white;
 }
 
-/* ===== CATEGORIA CLUB NATUBRAVA ESPECIAL ===== */
+/* ===== CATEGORIA CLUB NATUBRAVA ESPECIAL (MANTIDO) ===== */
 .club-category-btn {
   background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
   border: 2px solid #059669 !important;
