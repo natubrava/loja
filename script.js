@@ -494,16 +494,21 @@ async function loadProductsFromSheet(isBackground = false) {
   }
 }
 
-// ===== RENDERIZAÇÃO DE CATEGORIAS (SIMPLIFICADA) =====
+// ===== RENDERIZAÇÃO DE CATEGORIAS (CORRIGIDA - SEM "FORA DE ESTOQUE") =====
 function renderCategoryFilters() {
   const clubProducts = products.filter(p => p.clubPrice !== null && p.clubPrice > 0);
-  const outOfStockProducts = products.filter(p => p.status === 'out_of_stock');
   
   // Contar produtos por categoria
   const categoryCount = {};
   products.forEach(p => {
     categoryCount[p.category] = (categoryCount[p.category] || 0) + 1;
   });
+  
+  // ADICIONADO: Produtos específicos na categoria SUPLEMENTOS
+  const specificSupplementsProducts = products.filter(p => p.sku === '2' || p.sku === '409');
+  if (specificSupplementsProducts.length > 0) {
+    categoryCount['SUPLEMENTOS'] = (categoryCount['SUPLEMENTOS'] || 0) + specificSupplementsProducts.length;
+  }
   
   const originalCategories = [...new Set(products.map(p => p.category))];
   
@@ -549,12 +554,7 @@ function renderCategoryFilters() {
     }
   });
   
-  if (outOfStockProducts.length > 0) {
-    categories.push({ 
-      name: '❌ Fora de Estoque', 
-      count: outOfStockProducts.length
-    });
-  }
+  // REMOVIDO: Categoria "❌ Fora de Estoque"
   
   elements.categoryFilters.innerHTML = categories.map(cat => {
     let buttonClass = 'category-btn text-sm sm:text-base px-4 py-2 rounded-full';
@@ -563,9 +563,6 @@ function renderCategoryFilters() {
     if (cat.name === '⭐ Club NatuBrava') {
       buttonClass += ' club-category-btn';
       buttonContent = `<span class="flex items-center"><ion-icon name="star" class="text-yellow-400 mr-1"></ion-icon>Club NatuBrava <span class="ml-2 text-xs bg-white bg-opacity-30 px-2 py-0.5 rounded-full">${cat.count}</span></span>`;
-    } else if (cat.name === '❌ Fora de Estoque') {
-      buttonClass += ' out-of-stock-category-btn';
-      buttonContent = `${cat.name} <span class="text-xs ml-1 bg-red-700 bg-opacity-20 px-2 py-0.5 rounded-full">${cat.count}</span>`;
     } else {
       buttonContent = `${cat.name} <span class="text-xs ml-1 bg-green-700 bg-opacity-20 px-2 py-0.5 rounded-full">${cat.count}</span>`;
     }
@@ -574,7 +571,7 @@ function renderCategoryFilters() {
   }).join('');
 }
 
-// ===== APLICAR FILTROS E BUSCA (BUSCA GLOBAL) =====
+// ===== APLICAR FILTROS E BUSCA (CORRIGIDO PARA SUPLEMENTOS) =====
 function applyFilters() {
   const searchTerm = normalizeText(elements.searchBox.value);
   const searchTerms = searchTerm.split(' ').filter(t => t.length > 0);
@@ -593,8 +590,9 @@ function applyFilters() {
       return product.clubPrice !== null && product.clubPrice > 0;
     } else if (currentFilter === 'VIAAROMA') {
       return product.category === 'OLEO ESSENCIAL' || product.category === 'ESSENCIAS';
-    } else if (currentFilter === '❌ Fora de Estoque') {
-      return product.status === 'out_of_stock';
+    } else if (currentFilter === 'SUPLEMENTOS') {
+      // ADICIONADO: Incluir produtos específicos na categoria SUPLEMENTOS
+      return product.category === 'SUPLEMENTOS' || product.sku === '2' || product.sku === '409';
     } else {
       return product.category === currentFilter;
     }
@@ -1002,6 +1000,31 @@ function renderCart() {
   elements.checkoutButton.disabled = cart.length === 0;
 }
 
+// ===== VALIDAÇÃO EM TEMPO REAL DO MODAL "AVISE-ME" (CORRIGIDO) =====
+function setupNotifyModalValidation() {
+  const validateNotifyForm = () => {
+    const name = elements.clientNotifyName.value.trim();
+    const phone = elements.clientNotifyPhone.value.trim();
+    const isValid = name.length > 0 && phone.length > 0;
+    
+    elements.confirmNotifyButton.disabled = !isValid;
+    
+    if (isValid) {
+      elements.confirmNotifyButton.classList.remove('opacity-50', 'cursor-not-allowed');
+      elements.confirmNotifyButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+    } else {
+      elements.confirmNotifyButton.classList.add('opacity-50', 'cursor-not-allowed');
+      elements.confirmNotifyButton.classList.remove('hover:bg-blue-700');
+    }
+  };
+  
+  elements.clientNotifyName.addEventListener('input', validateNotifyForm);
+  elements.clientNotifyPhone.addEventListener('input', validateNotifyForm);
+  
+  // Validação inicial
+  validateNotifyForm();
+}
+
 // ===== MODAIS =====
 function openCartPanel() { 
   elements.cartPanel.classList.add('open'); 
@@ -1055,6 +1078,17 @@ function openNotifyModal(productId) {
   }, 50);
   
   elements.notifyModal.dataset.productId = productId;
+  
+  // ADICIONADO: Resetar validação quando abrir modal
+  setTimeout(() => {
+    if (elements.clientNotifyName && elements.clientNotifyPhone) {
+      elements.clientNotifyName.value = '';
+      elements.clientNotifyPhone.value = '';
+      elements.clientNotifyObservation.value = '';
+      elements.confirmNotifyButton.disabled = true;
+      elements.confirmNotifyButton.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+  }, 100);
 }
 
 function closeNotifyModal() {
@@ -1476,6 +1510,9 @@ function setupEventListeners() {
     
     closeNameModal();
   });
+  
+  // ADICIONADO: Configurar validação em tempo real para modal "Avise-me"
+  setupNotifyModalValidation();
   
   document.addEventListener('keydown', (e) => {
     if(e.key === 'Escape') {
