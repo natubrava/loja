@@ -207,6 +207,7 @@
     <ion-icon name="chevron-up-outline"></ion-icon>
   </button>
 
+  <!-- Modal do Carrinho -->
   <div id="cart-overlay" class="cart-overlay fixed inset-0 bg-black bg-opacity-50 z-50"></div>
   <div id="cart-panel" class="cart-panel fixed top-0 right-0 w-full max-w-sm h-full bg-white shadow-xl z-50 flex flex-col">
     <div class="flex justify-between items-center p-4 border-b">
@@ -229,6 +230,7 @@
     </div>
   </div>
 
+  <!-- Modal de Finalização de Pedido -->
   <div id="name-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden items-center justify-center">
     <div id="name-modal" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md m-4 transform transition-transform duration-300 scale-95 opacity-0">
         <div class="text-center mb-6">
@@ -262,7 +264,56 @@
         </div>
     </div>
   </div>
+
+  <!-- NOVO: Modal "Avise-me assim que chegar" -->
+  <div id="notify-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden items-center justify-center">
+    <div id="notify-modal" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md m-4 transform transition-transform duration-300 scale-95 opacity-0">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-green-800 flex items-center">
+                <ion-icon name="notifications-outline" class="mr-2 text-xl text-blue-600"></ion-icon>
+                Avise-me quando chegar
+            </h3>
+            <button id="close-notify-modal-button" class="text-gray-500 hover:text-gray-800 text-2xl" aria-label="Fechar Modal">
+                <ion-icon name="close-outline"></ion-icon>
+            </button>
+        </div>
+        
+        <div class="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+            <p class="text-sm text-blue-800 mb-1"><strong>Produto de interesse:</strong></p>
+            <p class="text-sm font-semibold text-blue-900" id="notify-product-name">Nome do Produto</p>
+            <p class="text-xs text-blue-700">SKU: <span id="notify-product-sku">000</span></p>
+        </div>
+        
+        <div class="space-y-4">
+            <div>
+                <label for="client-notify-name" class="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
+                <input type="text" id="client-notify-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Digite seu nome completo" autocomplete="name">
+            </div>
+            
+            <div>
+                <label for="client-notify-phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone/WhatsApp *</label>
+                <input type="tel" id="client-notify-phone" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="(00) 00000-0000" autocomplete="tel">
+            </div>
+            
+            <div>
+                <label for="client-notify-observation" class="block text-sm font-medium text-gray-700 mb-1">Observações <span class="text-gray-400">(opcional)</span></label>
+                <textarea id="client-notify-observation" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Alguma observação adicional..."></textarea>
+            </div>
+            
+            <p id="notify-error" class="text-red-500 text-xs hidden">Por favor, preencha todos os campos obrigatórios.</p>
+        </div>
+        
+        <div class="mt-6 flex justify-end space-x-3">
+            <button id="cancel-notify-button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-200">Cancelar</button>
+            <button id="confirm-notify-button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 flex items-center">
+                <ion-icon name="send-outline" class="mr-1 text-sm"></ion-icon>
+                Registrar Interesse
+            </button>
+        </div>
+    </div>
+  </div>
   
+  <!-- Modal de Informações de Entrega -->
   <div id="delivery-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden items-center justify-center">
     <div id="delivery-modal" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg m-4 transform transition-transform duration-300 scale-95 opacity-0">
       <div class="flex justify-between items-center mb-4">
@@ -289,6 +340,7 @@
     </div>
   </div>
 
+  <!-- Modal Club NatuBrava -->
   <div id="club-info-modal-overlay" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden items-center justify-center">
     <div id="club-info-modal" class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg m-4 transform transition-transform duration-300 scale-95 opacity-0">
       <div class="flex justify-between items-center mb-4">
