@@ -390,6 +390,16 @@ async function loadProductsFromSheet(isBackground = false) {
       const isGranel = (item.CATEGORIA || '').toUpperCase() === 'GRANEL';
       const basePrice = parsePrice(item.PRECO);
       
+      // CORREÇÃO PRINCIPAL: Usar parseFloat para estoque em vez de parseInt
+      // Isso permite valores decimais como 0,900
+      let stockValue;
+      if (item.ESTOQUE) {
+        // Substitui vírgula por ponto e converte para float
+        stockValue = parseFloat(item.ESTOQUE.toString().replace(',', '.')) || 0;
+      } else {
+        stockValue = 0;
+      }
+      
       // Buscar preço club em diferentes possíveis colunas
       let clubPrice = 0;
       
@@ -419,7 +429,7 @@ async function loadProductsFromSheet(isBackground = false) {
         name: item.NOME_SITE || 'Produto sem nome',
         price: isGranel ? basePrice / 1000 : basePrice,
         clubPrice: finalClubPrice,
-        stock: parseInt(item.ESTOQUE) || 0,
+        stock: stockValue, // Agora aceita valores decimais
         category: item.CATEGORIA || 'Outros',
         image: item.URL_FOTO || `https://placehold.co/300x200/166534/ffffff?text=${item.SKU}`,
         isGranel: isGranel,
