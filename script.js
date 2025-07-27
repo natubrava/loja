@@ -505,7 +505,7 @@ function renderCategoryFilters() {
   });
   
   // ADICIONADO: Produtos específicos na categoria SUPLEMENTOS
-  const specificSupplementsProducts = products.filter(p => p.sku === '2' || p.sku === '409');
+  const specificSupplementsProducts = products.filter(p => p.sku === '2' || p.sku === '409' || p.sku === '340');
   if (specificSupplementsProducts.length > 0) {
     categoryCount['SUPLEMENTOS'] = (categoryCount['SUPLEMENTOS'] || 0) + specificSupplementsProducts.length;
   }
@@ -592,7 +592,7 @@ function applyFilters() {
       return product.category === 'OLEO ESSENCIAL' || product.category === 'ESSENCIAS';
     } else if (currentFilter === 'SUPLEMENTOS') {
       // ADICIONADO: Incluir produtos específicos na categoria SUPLEMENTOS
-      return product.category === 'SUPLEMENTOS' || product.sku === '2' || product.sku === '409';
+      return product.category === 'SUPLEMENTOS' || product.sku === '2' || product.sku === '409' || product.sku === '340';
     } else {
       return product.category === currentFilter;
     }
@@ -1000,30 +1000,8 @@ function renderCart() {
   elements.checkoutButton.disabled = cart.length === 0;
 }
 
-// ===== VALIDAÇÃO EM TEMPO REAL DO MODAL "AVISE-ME" (CORRIGIDO) =====
-function setupNotifyModalValidation() {
-  const validateNotifyForm = () => {
-    const name = elements.clientNotifyName.value.trim();
-    const phone = elements.clientNotifyPhone.value.trim();
-    const isValid = name.length > 0 && phone.length > 0;
-    
-    elements.confirmNotifyButton.disabled = !isValid;
-    
-    if (isValid) {
-      elements.confirmNotifyButton.classList.remove('opacity-50', 'cursor-not-allowed');
-      elements.confirmNotifyButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-    } else {
-      elements.confirmNotifyButton.classList.add('opacity-50', 'cursor-not-allowed');
-      elements.confirmNotifyButton.classList.remove('hover:bg-blue-700');
-    }
-  };
-  
-  elements.clientNotifyName.addEventListener('input', validateNotifyForm);
-  elements.clientNotifyPhone.addEventListener('input', validateNotifyForm);
-  
-  // Validação inicial
-  validateNotifyForm();
-}
+// ===== VALIDAÇÃO DO MODAL "AVISE-ME" (REMOVIDA - BOTÃO SEMPRE ATIVO) =====
+// Função removida - botão sempre ativo, validação na hora do envio
 
 // ===== MODAIS =====
 function openCartPanel() { 
@@ -1078,17 +1056,6 @@ function openNotifyModal(productId) {
   }, 50);
   
   elements.notifyModal.dataset.productId = productId;
-  
-  // ADICIONADO: Resetar validação quando abrir modal
-  setTimeout(() => {
-    if (elements.clientNotifyName && elements.clientNotifyPhone) {
-      elements.clientNotifyName.value = '';
-      elements.clientNotifyPhone.value = '';
-      elements.clientNotifyObservation.value = '';
-      elements.confirmNotifyButton.disabled = true;
-      elements.confirmNotifyButton.classList.add('opacity-50', 'cursor-not-allowed');
-    }
-  }, 100);
 }
 
 function closeNotifyModal() {
@@ -1118,19 +1085,22 @@ function sendNotifyRequest() {
   const clientPhone = elements.clientNotifyPhone.value.trim();
   const observation = elements.clientNotifyObservation.value.trim();
   
+  // CORRIGIDO: Validação igual ao modal do carrinho
   let hasError = false;
+  
+  // Resetar estilos de erro
+  elements.clientNotifyName.classList.remove('border-red-500');
+  elements.clientNotifyPhone.classList.remove('border-red-500');
+  elements.notifyError.classList.add('hidden');
+  
   if (!clientName) {
     elements.clientNotifyName.classList.add('border-red-500');
     hasError = true;
-  } else {
-    elements.clientNotifyName.classList.remove('border-red-500');
   }
   
   if (!clientPhone) {
     elements.clientNotifyPhone.classList.add('border-red-500');
     hasError = true;
-  } else {
-    elements.clientNotifyPhone.classList.remove('border-red-500');
   }
   
   if (hasError) {
@@ -1138,8 +1108,7 @@ function sendNotifyRequest() {
     return;
   }
   
-  elements.notifyError.classList.add('hidden');
-  
+  // Se chegou aqui, os dados estão válidos
   let message = `🔔 *AVISO DE INTERESSE EM PRODUTO*\n\n`;
   message += `*Cliente:* ${clientName}\n`;
   message += `*Telefone:* ${clientPhone}\n\n`;
@@ -1349,11 +1318,8 @@ function setupEventListeners() {
     elements.confirmNotifyButton.addEventListener('click', sendNotifyRequest);
   }
   
-  if (elements.notifyModalOverlay) {
-    elements.notifyModalOverlay.addEventListener('click', (e) => {
-      if (e.target === elements.notifyModalOverlay) closeNotifyModal();
-    });
-  }
+  // REMOVIDO: Event listener que fechava modal ao clicar fora
+  // Modal "Avise-me" só fecha com X ou enviando mensagem
 
   elements.categoryFilters.addEventListener('click', e => {
     if (e.target.matches('.category-btn') || e.target.closest('.category-btn')) {
@@ -1511,8 +1477,8 @@ function setupEventListeners() {
     closeNameModal();
   });
   
-  // ADICIONADO: Configurar validação em tempo real para modal "Avise-me"
-  setupNotifyModalValidation();
+  // REMOVIDO: Validação em tempo real do modal "Avise-me"
+  // Agora botão fica sempre ativo, validação apenas no envio
   
   document.addEventListener('keydown', (e) => {
     if(e.key === 'Escape') {
