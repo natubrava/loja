@@ -10,7 +10,6 @@ const CONFIG = {
   CACHE_KEY: 'natuBrava_products_cache',
   ITEMS_PER_PAGE: 60, // Produtos por página
   SCROLL_THRESHOLD: 300, // Quando mostrar botão voltar ao topo
-  LOW_STOCK_THRESHOLD: 100, // Gramas - estoque baixo para granel
   MIN_GRANEL_QUANTITY: 50 // Quantidade mínima para granel
 };
 
@@ -238,15 +237,13 @@ function parseCSV(csvText) {
 // ===== NOVA FUNÇÃO PARA DETERMINAR STATUS DO PRODUTO =====
 function getProductStatus(product) {
   if (!product.isGranel) {
-    // Produto unitário
+    // Produto unitário - simples: tem estoque ou não tem
     if (product.stock <= 0) return 'out_of_stock';
-    if (product.stock < 2) return 'low_stock';
     return 'available';
   } else {
-    // Produto a granel
+    // Produto a granel - indisponível se não dá para vender pelo menos 50g
     const stockInGrams = product.stock * 1000;
-    if (stockInGrams <= 0) return 'out_of_stock';
-    if (stockInGrams < CONFIG.LOW_STOCK_THRESHOLD) return 'low_stock';
+    if (stockInGrams <= 0 || stockInGrams < CONFIG.MIN_GRANEL_QUANTITY) return 'out_of_stock';
     return 'available';
   }
 }
@@ -313,7 +310,7 @@ function validateCartWithProducts() {
     
     // Verificar se produto está disponível para venda
     const status = getProductStatus(currentProduct);
-    if (status === 'out_of_stock' || status === 'low_stock') {
+    if (status === 'out_of_stock') {
       hasChanges = true;
       removedItems.push(currentProduct.name);
       continue;
@@ -507,18 +504,13 @@ async function loadProductsFromSheet(isBackground = false) {
 
 // ===== RENDERIZAÇÃO DE CATEGORIAS COM CONTADORES =====
 function renderCategoryFilters() {
-  const clubProducts = products.filter(p => p.clubPrice !== null && p.clubPrice > 0 && (p.status === 'available' || p.status === 'low_stock' || p.status === 'out_of_stock'));
-  const availableProducts = products.filter(p => p.status === 'available');
+  const clubProducts = products.filter(p => p.clubPrice !== null && p.clubPrice > 0);
   const outOfStockProducts = products.filter(p => p.status === 'out_of_stock');
   
   // Contar produtos por categoria (incluindo fora de estoque)
   const categoryCount = {};
-  const availableCategoryCount = {};
   products.forEach(p => {
     categoryCount[p.category] = (categoryCount[p.category] || 0) + 1;
-    if (p.status === 'available') {
-      availableCategoryCount[p.category] = (availableCategoryCount[p.category] || 0) + 1;
-    }
   });
   
   // Extrair categorias originais
@@ -528,7 +520,6 @@ function renderCategoryFilters() {
   const displayCategories = [];
   let hasViaAromaCategories = false;
   let viaAromaCount = 0;
-  let viaAromaAvailableCount = 0;
   
   originalCategories.forEach(category => {
     if (category === 'OLEO ESSENCIAL' || category === 'ESSENCIAS') {
@@ -537,7 +528,6 @@ function renderCategoryFilters() {
         hasViaAromaCategories = true;
       }
       viaAromaCount += categoryCount[category] || 0;
-      viaAromaAvailableCount += availableCategoryCount[category] || 0;
     } else {
       displayCategories.push(category);
     }
@@ -545,16 +535,13 @@ function renderCategoryFilters() {
   
   let categories = [{ 
     name: 'Todos', 
-    count: products.length, 
-    availableCount: availableProducts.length 
+    count: products.length
   }];
   
   if (clubProducts.length > 0) {
-    const availableClubProducts = clubProducts.filter(p => p.status === 'available');
     categories.push({ 
       name: '⭐ Club NatuBrava', 
-      count: clubProducts.length,
-      availableCount: availableClubProducts.length 
+      count: clubProducts.length
     });
   }
   
@@ -562,14 +549,12 @@ function renderCategoryFilters() {
     if (cat === 'VIAAROMA') {
       categories.push({ 
         name: cat, 
-        count: viaAromaCount,
-        availableCount: viaAromaAvailableCount 
+        count: viaAromaCount
       });
     } else {
       categories.push({ 
         name: cat, 
-        count: categoryCount[cat] || 0,
-        availableCount: availableCategoryCount[cat] || 0 
+        count: categoryCount[cat] || 0
       });
     }
   });
@@ -577,8 +562,7 @@ function renderCategoryFilters() {
   if (outOfStockProducts.length > 0) {
     categories.push({ 
       name: '❌ Fora de Estoque', 
-      count: outOfStockProducts.length,
-      availableCount: 0 
+      count: outOfStockProducts.length
     });
   }
   
@@ -588,13 +572,12 @@ function renderCategoryFilters() {
     
     if (cat.name === '⭐ Club NatuBrava') {
       buttonClass += ' club-category-btn';
-      buttonContent = `<span class="flex items-center"><ion-icon name="star" class="text-yellow-400 mr-1"></ion-icon>Club NatuBrava <span class="ml-2 text-xs bg-white bg-opacity-30 px-2 py-0.5 rounded-full">${cat.availableCount}/${cat.count}</span></span>`;
+      buttonContent = `<span class="flex items-center"><ion-icon name="star" class="text-yellow-400 mr-1"></ion-icon>Club NatuBrava <span class="ml-2 text-xs bg-white bg-opacity-30 px-2 py-0.5 rounded-full">${cat.count}</span></span>`;
     } else if (cat.name === '❌ Fora de Estoque') {
       buttonClass += ' out-of-stock-category-btn';
       buttonContent = `${cat.name} <span class="text-xs ml-1 bg-red-700 bg-opacity-20 px-2 py-0.5 rounded-full">${cat.count}</span>`;
     } else {
-      const countDisplay = cat.availableCount === cat.count ? cat.count : `${cat.availableCount}/${cat.count}`;
-      buttonContent = `${cat.name} <span class="text-xs ml-1 bg-green-700 bg-opacity-20 px-2 py-0.5 rounded-full">${countDisplay}</span>`;
+      buttonContent = `${cat.name} <span class="text-xs ml-1 bg-green-700 bg-opacity-20 px-2 py-0.5 rounded-full">${cat.count}</span>`;
     }
     
     return `<button class="${buttonClass}" data-category="${cat.name}">${buttonContent}</button>`;
@@ -607,7 +590,13 @@ function applyFilters() {
   const searchTerms = searchTerm.split(' ').filter(t => t.length > 0);
   
   filteredProducts = products.filter(product => {
-    // Filtro de categoria
+    // Se há busca, SEMPRE buscar em todos os produtos (ignorar categoria)
+    if (searchTerms.length > 0) {
+      const productText = normalizeText(`${product.name} ${product.sku}`);
+      return searchTerms.every(term => productText.includes(term));
+    }
+    
+    // Se não há busca, aplicar filtro de categoria
     let inCategory = false;
     if (currentFilter === 'Todos') {
       inCategory = true;
@@ -621,21 +610,14 @@ function applyFilters() {
       inCategory = product.category === currentFilter;
     }
     
-    // Filtro de busca (nome + SKU)
-    let matchesSearch = true;
-    if (searchTerms.length > 0) {
-      const productText = normalizeText(`${product.name} ${product.sku}`);
-      matchesSearch = searchTerms.every(term => productText.includes(term));
-    }
-    
-    return inCategory && matchesSearch;
+    return inCategory;
   });
   
   // Ordenar produtos: disponíveis primeiro, depois club, depois fora de estoque
   filteredProducts.sort((a, b) => {
-    // Primeiro critério: status (disponível > estoque baixo > fora de estoque)
+    // Primeiro critério: status (disponível > fora de estoque)
     if (a.status !== b.status) {
-      const statusOrder = { 'available': 0, 'low_stock': 1, 'out_of_stock': 2 };
+      const statusOrder = { 'available': 0, 'out_of_stock': 1 };
       return statusOrder[a.status] - statusOrder[b.status];
     }
     
@@ -676,7 +658,7 @@ function renderProducts() {
   pageProducts.forEach(product => {
     const card = document.createElement('div');
     const isGranel = product.isGranel;
-    const initialQty = isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1;
+    const initialQty = isGranel ? 100 : 1; // VOLTA PARA 100g inicial
     const hasClubPrice = product.clubPrice !== null && product.clubPrice > 0;
     const status = product.status;
     
@@ -684,8 +666,6 @@ function renderProducts() {
     let cardClass = 'product-card bg-white rounded-lg shadow-md overflow-hidden';
     if (status === 'out_of_stock') {
       cardClass += ' out-of-stock-card';
-    } else if (status === 'low_stock') {
-      cardClass += ' low-stock-card';
     }
     if (hasClubPrice && status !== 'out_of_stock') {
       cardClass += ' club-product-card';
@@ -701,11 +681,9 @@ function renderProducts() {
     let quantityControlsHTML = '';
     let buttonHTML = '';
     
-    // Badge de status
+    // Badge de status (apenas para fora de estoque)
     if (status === 'out_of_stock') {
       statusBadgeHTML = '<div class="status-badge out-of-stock-badge">Produto Indisponível</div>';
-    } else if (status === 'low_stock') {
-      statusBadgeHTML = '<div class="status-badge low-stock-badge">Últimas Unidades</div>';
     }
     
     // Preços
@@ -738,7 +716,7 @@ function renderProducts() {
     } else {
       quantityControlsHTML = `
         <div class="flex items-center space-x-1">
-          <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="-1"><ion-icon name="remove-outline" class="pointer-events-none"></ion-icon></button>
+          <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="-1" ${isGranel && initialQty <= CONFIG.MIN_GRANEL_QUANTITY ? 'disabled' : ''}><ion-icon name="remove-outline" class="pointer-events-none"></ion-icon></button>
           <span class="product-quantity font-medium text-base ${isGranel ? 'w-16' : 'w-6'} text-center">${isGranel ? `${initialQty}g` : initialQty}</span>
           <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="1"><ion-icon name="add-outline" class="pointer-events-none"></ion-icon></button>
         </div>`;
@@ -924,7 +902,7 @@ function addToCart(productId, quantity) {
   if (!product) return;
 
   // Verificar se produto está disponível
-  if (product.status === 'out_of_stock' || product.status === 'low_stock') {
+  if (product.status === 'out_of_stock') {
     showNotification('Este produto não está disponível para compra no momento.');
     return;
   }
@@ -1446,11 +1424,20 @@ function setupEventListeners() {
         qtySpan.textContent = isGranel ? `${newQty}g` : newQty;
         if (isGranel) {
           const priceToUse = hasClubPrice ? product.clubPrice : product.price;
-          card.querySelector('.product-total-price').textContent = formatPrice(priceToUse * newQty);
+          const totalPriceElement = card.querySelector('.product-total-price');
+          if (totalPriceElement) {
+            totalPriceElement.textContent = formatPrice(priceToUse * newQty);
+          }
         }
-        card.querySelector('[data-change="-1"]').disabled = newQty <= min;
-        card.querySelector('[data-change="1"]').disabled = newQty >= max;
       }
+      
+      // Atualizar estado dos botões sempre (mesmo se não mudou a quantidade)
+      const decreaseBtn = card.querySelector('[data-change="-1"]');
+      const increaseBtn = card.querySelector('[data-change="1"]');
+      const currentQuantity = parseInt(qtySpan.textContent.replace('g', ''));
+      
+      if (decreaseBtn) decreaseBtn.disabled = currentQuantity <= min;
+      if (increaseBtn) increaseBtn.disabled = currentQuantity >= max;
     }
   });
 
