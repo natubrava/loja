@@ -1,1513 +1,411 @@
-// ===== CONFIGURAÇÕES =====
-const CONFIG = {
-  SHEET_CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS6FsKfgWJxQBzkKSP3ekD-Tbb7bfvGs_Df9aUT9bkv8gPL8dySYVkMmFdlajdrgxLZUs3pufrc0ZX8/pub?gid=1353948690&single=true&output=csv',
-  WHATSAPP_NUMBER: '554733483186',
-  PROXIES: [
-    'https://api.allorigins.win/raw?url=',
-    'https://corsproxy.io/?',
-  ],
-  CACHE_DURATION: 3 * 60 * 1000, // 3 minutos - permite atualizações diárias
-  CACHE_KEY: 'natuBrava_products_cache',
-  ITEMS_PER_PAGE: 60, // Produtos por página
-  SCROLL_THRESHOLD: 300, // Quando mostrar botão voltar ao topo
-  MIN_GRANEL_QUANTITY: 50 // Quantidade mínima para granel
-};
-
-// ===== FUNÇÕES DE CACHE OTIMIZADAS =====
-function getCachedProducts() {
-  try {
-    const cached = localStorage.getItem(CONFIG.CACHE_KEY);
-    if (cached) {
-      const data = JSON.parse(cached);
-      // Cache válido por apenas 3 minutos para não afetar atualizações diárias
-      if (Date.now() - data.timestamp < CONFIG.CACHE_DURATION) {
-        return data.products;
-      }
-    }
-  } catch (error) {
-    localStorage.removeItem(CONFIG.CACHE_KEY);
-  }
-  return null;
+/* ===== ESTILOS PARA BOTÕES DO HEADER ===== */
+.header-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #15803d;
+  background-color: transparent;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
 }
 
-function setCachedProducts(products) {
-  try {
-    const cacheData = {
-      products: products,
-      timestamp: Date.now()
-    };
-    localStorage.setItem(CONFIG.CACHE_KEY, JSON.stringify(cacheData));
-  } catch (error) {
-    console.warn('Erro ao salvar cache de produtos:', error);
-  }
+.header-nav-btn:hover {
+  color: #ffffff;
+  background-color: #15803d;
+  border-color: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(21, 128, 61, 0.2);
 }
 
-// ===== FUNÇÕES DE PERSISTÊNCIA DO CARRINHO =====
-function saveCartToLocalStorage() {
-  try {
-    const cartData = {
-      items: cart,
-      timestamp: Date.now(),
-      version: '2.1'
-    };
-    localStorage.setItem('natuBravaCart', JSON.stringify(cartData));
-  } catch (error) {
-    console.error('Erro ao salvar carrinho:', error);
-  }
+.header-nav-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(21, 128, 61, 0.2);
 }
 
-function loadCartFromLocalStorage() {
-  try {
-    const savedData = localStorage.getItem('natuBravaCart');
-    if (!savedData) return [];
-    
-    const cartData = JSON.parse(savedData);
-    
-    if (Array.isArray(cartData)) {
-      return cartData;
-    }
-    
-    if (cartData.items && Array.isArray(cartData.items)) {
-      const daysSinceLastSave = (Date.now() - (cartData.timestamp || 0)) / (1000 * 60 * 60 * 24);
-      if (daysSinceLastSave > 7) {
-        localStorage.removeItem('natuBravaCart');
-        return [];
-      }
-      return cartData.items;
-    }
-    
-    return [];
-  } catch (error) {
-    localStorage.removeItem('natuBravaCart');
-    return [];
+.header-nav-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.2);
+}
+
+/* Efeito adicional para o botão Club NatuBrava */
+.header-nav-btn:has(ion-icon[name="star-outline"]) {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+  border-color: #10b981;
+  font-weight: 600;
+}
+
+.header-nav-btn:has(ion-icon[name="star-outline"]):hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #059669;
+  color: #ffffff;
+}
+
+/* Responsivo para telas menores */
+@media (min-width: 640px) {
+  .header-nav-btn {
+    font-size: 1rem;
+    padding: 10px 18px;
   }
 }
 
-// ===== FETCH OTIMIZADO COM PROXIES =====
-async function fetchWithProxy(url) {
-  const errors = [];
-  
-  for (const proxy of CONFIG.PROXIES) {
-    try {
-      const response = await fetch(proxy + encodeURIComponent(url), {
-        headers: {
-          'Accept': 'text/csv,text/plain,*/*'
-        }
-      });
-      
-      if (response.ok) {
-        return response;
-      }
-      
-      errors.push(`Proxy ${proxy}: Status ${response.status}`);
-    } catch (error) {
-      errors.push(`Proxy ${proxy}: ${error.message}`);
-      continue;
-    }
-  }
-  
-  throw new Error(`Todos os proxies falharam: ${errors.join(', ')}`);
+/* ===== CORREÇÕES HEADER ===== */
+header nav button {
+  background-color: transparent;
 }
 
-// ===== ESTADO GLOBAL =====
-let products = [];
-let filteredProducts = [];
-let cart = [];
-let currentFilter = 'Todos';
-let currentPage = 1;
-let totalPages = 1;
-let isLoading = false;
-let searchTimeout;
-
-// ===== ELEMENTOS DOM (CACHE) =====
-const elements = {
-  loadingStatus: document.getElementById('loading-status'),
-  produtosSection: document.getElementById('produtos'),
-  errorSection: document.getElementById('error-section'),
-  errorDetails: document.getElementById('error-details'),
-  retryButton: document.getElementById('retry-button'),
-  productList: document.getElementById('product-list'),
-  categoryFilters: document.getElementById('category-filters'),
-  noProductsMessage: document.getElementById('no-products-message'),
-  cartButton: document.getElementById('cart-button'),
-  cartButtonMobile: document.getElementById('cart-button-mobile'),
-  closeCartButton: document.getElementById('close-cart-button'),
-  cartPanel: document.getElementById('cart-panel'),
-  cartOverlay: document.getElementById('cart-overlay'),
-  cartItems: document.getElementById('cart-items'),
-  cartCount: document.getElementById('cart-count'),
-  cartCountMobile: document.getElementById('cart-count-mobile'),
-  cartTotal: document.getElementById('cart-total'),
-  checkoutButton: document.getElementById('checkout-button'),
-  cartEmptyMessage: document.getElementById('cart-empty-message'),
-  currentYear: document.getElementById('current-year'),
-  searchBox: document.getElementById('search-box'),
-  nameModalOverlay: document.getElementById('name-modal-overlay'),
-  nameModal: document.getElementById('name-modal'),
-  clientNameInput: document.getElementById('client-name'),
-  clientObservation: document.getElementById('client-observation'),
-  nameError: document.getElementById('name-error'),
-  confirmCheckoutButton: document.getElementById('confirm-checkout-button'),
-  cancelCheckoutButton: document.getElementById('cancel-checkout-button'),
-  deliveryInfoButton: document.getElementById('delivery-info-button'),
-  deliveryModalOverlay: document.getElementById('delivery-modal-overlay'),
-  closeDeliveryModalButton: document.getElementById('close-delivery-modal-button'),
-  okDeliveryModalButton: document.getElementById('ok-delivery-modal-button'),
-  clubInfoButton: document.getElementById('club-info-button'),
-  clubInfoModalOverlay: document.getElementById('club-info-modal-overlay'),
-  closeClubModalButton: document.getElementById('close-club-modal-button'),
-  mobileMenuButton: document.getElementById('mobile-menu-button'),
-  mobileMenu: document.getElementById('mobile-menu'),
-  clubInfoButtonMobile: document.getElementById('club-info-button-mobile'),
-  deliveryInfoButtonMobile: document.getElementById('delivery-info-button-mobile'),
-  pagination: document.getElementById('pagination'),
-  productCounter: document.getElementById('product-counter'),
-  backToTop: document.getElementById('back-to-top'),
-  searchResults: document.getElementById('search-results'),
-  // Novos elementos para o modal "Avise-me"
-  notifyModalOverlay: document.getElementById('notify-modal-overlay'),
-  notifyModal: document.getElementById('notify-modal'),
-  clientNotifyName: document.getElementById('client-notify-name'),
-  clientNotifyPhone: document.getElementById('client-notify-phone'),
-  clientNotifyObservation: document.getElementById('client-notify-observation'),
-  notifyError: document.getElementById('notify-error'),
-  confirmNotifyButton: document.getElementById('confirm-notify-button'),
-  cancelNotifyButton: document.getElementById('cancel-notify-button'),
-  closeNotifyModalButton: document.getElementById('close-notify-modal-button'),
-};
-
-// ===== FUNÇÕES UTILITÁRIAS =====
-function parsePrice(priceStr) { 
-  if (!priceStr) return 0; 
-  return parseFloat(priceStr.toString().replace(',', '.')) || 0; 
+/* ===== ESTILOS PARA INSTAGRAM ===== */
+.instagram-btn {
+  background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+  box-shadow: 0 4px 12px rgba(131, 58, 180, 0.3);
 }
 
-function formatPrice(price) { 
-  return price.toFixed(2).replace('.', ','); 
+.instagram-btn:hover {
+  background: linear-gradient(135deg, #6c2b8f 0%, #e01818 50%, #e09b39 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(131, 58, 180, 0.4);
 }
 
-function normalizeText(text) { 
-  if (!text) return ''; 
-  return text.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); 
+/* ===== CORREÇÕES PARA LAYOUT SHIFT (CLS) ===== */
+header { min-height: 80px; }
+header nav { min-height: 60px; }
+header img[alt="Logo da NatuBrava"] { width: 160px !important; height: 60px !important; object-fit: contain; }
+.bg-gradient-to-r { min-height: 200px; }
+#sobre { min-height: 500px; }
+#category-filters { min-height: 50px; }
+.max-w-xl.mx-auto.mb-6 { min-height: 80px; }
+body { font-display: swap; }
+
+/* ===== ESTILOS PARA PAGINAÇÃO ===== */
+#pagination { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem; flex-wrap: wrap; }
+.pagination-btn { min-width: 40px; height: 40px; padding: 0.5rem; border: 2px solid #e5e7eb; background-color: white; color: #374151; font-weight: 500; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; }
+.pagination-btn:hover:not(:disabled) { background-color: #10b981; color: white; border-color: #10b981; transform: translateY(-1px); }
+.pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pagination-btn.active { background-color: #15803d; color: white; border-color: #15803d; }
+.pagination-dots { padding: 0 0.5rem; color: #9ca3af; }
+
+/* ===== ESTILOS PARA CONTADOR DE PRODUTOS ===== */
+#product-counter { font-size: 0.875rem; color: #4b5563; margin-bottom: 1rem; }
+#product-counter strong { color: #15803d; font-weight: 600; }
+
+/* ===== ESTILOS PARA BOTÃO VOLTAR AO TOPO ===== */
+.back-to-top { position: fixed; bottom: 2rem; right: 2rem; width: 48px; height: 48px; background-color: #15803d; color: white; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 40; box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3); }
+.back-to-top.show { opacity: 1; visibility: visible; }
+.back-to-top:hover { background-color: #166534; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(21, 128, 61, 0.4); }
+.back-to-top:active { transform: translateY(0); }
+
+/* ===== DESTAQUE DE BUSCA ===== */
+mark { background-color: #fef08a; color: inherit; padding: 0 0.125rem; border-radius: 0.125rem; }
+
+/* ===== ESTILOS RESPONSIVOS PARA NOVOS ELEMENTOS ===== */
+@media (max-width: 640px) {
+  .pagination-btn { min-width: 36px; height: 36px; font-size: 0.875rem; }
+  .back-to-top { bottom: 1.5rem; right: 1.5rem; width: 40px; height: 40px; font-size: 1.25rem; }
+  #product-counter { font-size: 0.75rem; }
 }
 
-function showStatus(message, isError = false) {
-  if (isError) {
-    elements.loadingStatus.style.display = 'none';
-    elements.produtosSection.style.display = 'none';
-    elements.errorSection.style.display = 'block';
-    elements.errorDetails.textContent = message;
-  } else {
-    elements.loadingStatus.style.display = 'block';
-    elements.produtosSection.style.display = 'none';
-    elements.errorSection.style.display = 'none';
-    elements.loadingStatus.innerHTML = `<div class="loading-spinner"></div><p class="mt-4 text-gray-600">${message}</p>`;
-  }
+/* ===== CÓDIGO GERAL ===== */
+body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+html { scroll-behavior: smooth; }
+
+/* Loading Spinner */
+.loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid #15803d; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; transform: translateZ(0); }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes cart-bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+.cart-bounce-animation { animation: cart-bounce 0.4s ease-in-out; }
+
+/* Painel do Carrinho e Modais */
+.cart-panel { transition: transform 0.3s ease-in-out; transform: translateX(100%); backface-visibility: hidden; }
+.cart-panel.open { transform: translateX(0); }
+.cart-overlay, #name-modal-overlay, #delivery-modal-overlay, #club-info-modal-overlay, #notify-modal-overlay { transition: opacity 0.3s ease-in-out; opacity: 0; pointer-events: none; }
+.cart-overlay.open, #name-modal-overlay.open, #delivery-modal-overlay.open, #club-info-modal-overlay.open, #notify-modal-overlay.open { opacity: 1; pointer-events: auto; }
+#name-modal-overlay, #delivery-modal-overlay, #club-info-modal-overlay, #notify-modal-overlay { display: none; }
+#name-modal-overlay.open, #delivery-modal-overlay.open, #club-info-modal-overlay.open, #notify-modal-overlay.open { display: flex !important; }
+#name-modal, #delivery-modal, #club-info-modal, #notify-modal { transform: scale(0.95); opacity: 0; transition: all 0.3s ease-in-out; }
+#name-modal-overlay.open #name-modal, #delivery-modal-overlay.open #delivery-modal, #club-info-modal-overlay.open #club-info-modal, #notify-modal-overlay.open #notify-modal { transform: scale(1); opacity: 1; }
+.cart-items { scrollbar-width: thin; scrollbar-color: #c1c1c1 #f1f1f1; }
+.cart-items::-webkit-scrollbar { width: 6px; }
+.cart-items::-webkit-scrollbar-track { background: #f1f1f1; }
+.cart-items::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+.cart-items::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+.add-to-cart-btn:active, .product-quantity-change:active, .category-btn:active, .cart-quantity-change:active, .notify-me-btn:active { transform: scale(0.95); }
+.product-quantity-change:disabled, .cart-quantity-change:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+/* Filtros de categoria roláveis */
+#category-filters { display: flex; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+#category-filters::-webkit-scrollbar { display: none; }
+#category-filters .category-btn { flex-shrink: 0; }
+
+/* =======================================================================
+   ===== ESTILOS DOS BOTÕES DE CATEGORIA (DESIGN PROFISSIONAL) =====
+   ======================================================================= */
+.category-btn {
+  /* Cor base unificada para todos os botões */
+  background-color: #16a34a;
+  color: white;
+  border: none; /* Remove a borda padrão para um visual mais limpo */
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Garante que o padding não mude a altura */
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-function showSuccess() {
-  elements.loadingStatus.style.display = 'none';
-  elements.errorSection.style.display = 'none';
-  elements.produtosSection.style.display = 'block';
+.category-btn:hover {
+  /* Efeito de elevação sutil no hover */
+  background-color: #15803d;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
-function parseCSV(csvText) {
-  if (!csvText || typeof csvText !== 'string') throw new Error('CSV inválido ou vazio');
-  
-  const lines = csvText.trim().split('\n');
-  if (lines.length < 2) throw new Error('CSV deve ter cabeçalho e dados');
-  
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-  const required = ['SKU', 'NOME_SITE', 'PRECO', 'ESTOQUE', 'CATEGORIA', 'URL_FOTO'];
-  
-  if (required.some(col => !headers.includes(col))) {
-    throw new Error(`Colunas ausentes: ${required.filter(c=>!headers.includes(c)).join(', ')}`);
-  }
-  
-  return lines.slice(1).map(line => {
-    const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-    const obj = {};
-    headers.forEach((header, index) => {
-      obj[header] = (values[index] || '').trim().replace(/^"|"$/g, '');
-    });
-    return obj;
-  }).filter(item => item.SKU && item.NOME_SITE);
+.category-btn.active {
+  /* Destaque claro para o botão ativo */
+  background-color: #14532d;
+  color: white;
+  box-shadow: none;
+  transform: translateY(0);
+  /* Linha inferior como indicador moderno de seleção */
+  border-bottom: 3px solid #34d399;
 }
 
-// ===== NOVA FUNÇÃO PARA DETERMINAR STATUS DO PRODUTO =====
-function getProductStatus(product) {
-  if (!product.isGranel) {
-    // Produto unitário - simples: tem estoque ou não tem
-    if (product.stock <= 0) return 'out_of_stock';
-    return 'available';
-  } else {
-    // Produto a granel - indisponível se não dá para vender pelo menos 50g
-    const stockInGrams = product.stock * 1000;
-    if (stockInGrams <= 0 || stockInGrams < CONFIG.MIN_GRANEL_QUANTITY) return 'out_of_stock';
-    return 'available';
-  }
+/* Contadores dentro dos botões de categoria */
+.category-btn span .text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  padding: 0.125rem 0.6rem;
+  border-radius: 9999px;
+  margin-left: 0.75rem;
+  font-weight: 700;
+  color: white;
+  /* Fundo sutilmente mais escuro para efeito de camada */
+  background-color: #15803d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-// ===== LAZY LOADING DE IMAGENS =====
-function setupLazyLoading() {
-  const imageObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const img = entry.target;
-        const src = img.dataset.src;
-        
-        if (src) {
-          img.src = src;
-          img.removeAttribute('data-src');
-          imageObserver.unobserve(img);
-        }
-      }
-    });
-  }, {
-    rootMargin: '50px 0px',
-    threshold: 0.1
-  });
-  
-  document.querySelectorAll('img[data-src]').forEach(img => {
-    imageObserver.observe(img);
-  });
+/* Ajuste do contador no botão ativo para manter o contraste */
+.category-btn.active span .text-xs {
+  background-color: #166534;
+}
+/* ======================================================================= */
+
+/* ===== CATEGORIA CLUB NATUBRAVA ESPECIAL (MANTIDO E AJUSTADO) ===== */
+.club-category-btn {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  color: white !important;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+  border: none !important;
+  border-bottom: 3px solid transparent !important; /* Reseta a borda */
 }
 
-// ===== CARREGAMENTO INICIAL DO CARRINHO =====
-function loadInitialCart() {
-  try {
-    const savedCart = loadCartFromLocalStorage();
-    if (savedCart.length > 0) {
-      cart = savedCart;
-      renderCart();
-    }
-  } catch (error) {
-    cart = [];
-  }
+.club-category-btn:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
+  box-shadow: 0 6px 12px rgba(5, 150, 105, 0.4);
 }
 
-// ===== VALIDAÇÃO RIGOROSA DO CARRINHO (MANTIDA INTACTA) =====
-function validateCartWithProducts() {
-  if (cart.length === 0) return;
-  
-  const validatedCart = [];
-  let hasChanges = false;
-  let removedItems = [];
-  let adjustedItems = [];
-  
-  for (const cartItem of cart) {
-    const currentProduct = products.find(p => 
-      (p.id === cartItem.id) || 
-      (p.sku === cartItem.sku) || 
-      (p.sku === cartItem.id)
-    );
-    
-    if (!currentProduct) {
-      hasChanges = true;
-      removedItems.push(cartItem.name || `Produto ${cartItem.sku || cartItem.id}`);
-      continue;
-    }
-    
-    // Verificar se produto está disponível para venda
-    const status = getProductStatus(currentProduct);
-    if (status === 'out_of_stock') {
-      hasChanges = true;
-      removedItems.push(currentProduct.name);
-      continue;
-    }
-    
-    const maxStock = currentProduct.isGranel ? currentProduct.stock * 1000 : currentProduct.stock;
-    let finalQuantity = cartItem.quantity;
-    
-    if (finalQuantity > maxStock) {
-      finalQuantity = maxStock;
-      hasChanges = true;
-      adjustedItems.push({
-        name: currentProduct.name,
-        oldQty: cartItem.quantity,
-        newQty: finalQuantity,
-        unit: currentProduct.isGranel ? 'g' : ''
-      });
-    }
-    
-    validatedCart.push({
-      ...currentProduct,
-      quantity: finalQuantity
-    });
-  }
-  
-  cart = validatedCart;
-  renderCart();
-  
-  if (removedItems.length > 0) {
-    showNotification(`Removido(s) do carrinho: ${removedItems.join(', ')} (indisponível)`, 5000);
-  }
-  
-  if (adjustedItems.length > 0) {
-    adjustedItems.forEach(item => {
-      showNotification(`${item.name}: quantidade ajustada para ${item.newQty}${item.unit} (estoque limitado)`, 4000);
-    });
-  }
-  
-  if (hasChanges) {
-    saveCartToLocalStorage();
-  }
+.club-category-btn.active {
+  background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important;
+  box-shadow: none !important;
+  /* Destaque especial para o Club ativo */
+  border-bottom: 3px solid #6ee7b7 !important;
 }
 
-// ===== CARREGAMENTO OTIMIZADO DE PRODUTOS =====
-async function loadProducts() {
-  if (isLoading) return;
-  isLoading = true;
-  
-  // Primeiro, tenta carregar do cache
-  const cachedProducts = getCachedProducts();
-  if (cachedProducts) {
-    products = cachedProducts;
-    validateCartWithProducts();
-    renderCategoryFilters();
-    applyFilters();
-    showSuccess();
-    isLoading = false;
-    
-    // Carrega em background para atualizar o cache
-    loadProductsFromSheet(true);
-    return;
-  }
-  
-  // Se não há cache, carrega da planilha
-  await loadProductsFromSheet(false);
+/* Contador específico para o botão Club para garantir contraste */
+.club-category-btn span .text-xs {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
-async function loadProductsFromSheet(isBackground = false) {
-  if (!isBackground) {
-    showStatus('Conectando com a planilha...');
-  }
-  
-  try {
-    let response;
-    
-    // Tenta acesso direto primeiro
-    try {
-      response = await fetch(CONFIG.SHEET_CSV_URL, {
-        headers: {
-          'Accept': 'text/csv,text/plain,*/*',
-          'Cache-Control': 'no-cache'
-        }
-      });
-      
-      if (!response.ok) throw new Error('Acesso direto falhou');
-    } catch (directError) {
-      if (!isBackground) showStatus('Conectando via proxy...');
-      response = await fetchWithProxy(CONFIG.SHEET_CSV_URL);
-    }
-
-    if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
-    
-    if (!isBackground) showStatus('Processando dados da planilha...');
-    const csvText = await response.text();
-    
-    if (!csvText.trim()) throw new Error('Planilha vazia ou inacessível');
-    
-    const rawData = parseCSV(csvText);
-    
-    // Buscar possíveis variações da coluna club
-    const lines = csvText.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-    const possibleClubColumns = headers.filter(h => 
-      h.toUpperCase().includes('CLUB') || 
-      h.toUpperCase().includes('CLUBE') || 
-      h.toUpperCase().includes('VLR') ||
-      h.toUpperCase().includes('DESCONTO') ||
-      h.toUpperCase().includes('PROMO')
-    );
-    
-    const newProducts = rawData.map((item, index) => {
-      const isGranel = (item.CATEGORIA || '').toUpperCase() === 'GRANEL';
-      const basePrice = parsePrice(item.PRECO);
-      
-      let stockValue;
-      if (item.ESTOQUE) {
-        stockValue = parseFloat(item.ESTOQUE.toString().replace(',', '.')) || 0;
-      } else {
-        stockValue = 0;
-      }
-      
-      // Buscar preço club em diferentes possíveis colunas
-      let clubPrice = 0;
-      
-      if (item.CLUB_VLR) {
-        clubPrice = parsePrice(item.CLUB_VLR);
-      }
-      
-      if (clubPrice === 0) {
-        for (const col of possibleClubColumns) {
-          if (item[col]) {
-            const testPrice = parsePrice(item[col]);
-            if (testPrice > 0) {
-              clubPrice = testPrice;
-              break;
-            }
-          }
-        }
-      }
-      
-      const finalClubPrice = clubPrice > 0 ? (isGranel ? clubPrice / 1000 : clubPrice) : null;
-      
-      const product = {
-        id: parseInt(item.SKU) || index + Date.now(),
-        sku: item.SKU || `ITEM${index + 1}`,
-        name: item.NOME_SITE || 'Produto sem nome',
-        price: isGranel ? basePrice / 1000 : basePrice,
-        clubPrice: finalClubPrice,
-        stock: stockValue,
-        category: item.CATEGORIA || 'Outros',
-        image: item.URL_FOTO || `https://placehold.co/300x200/166534/ffffff?text=${item.SKU}`,
-        isGranel: isGranel,
-        minQuantity: isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1,
-        quantityStep: isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1,
-      };
-      
-      // Adicionar status do produto
-      product.status = getProductStatus(product);
-      
-      return product;
-    }).filter(p => p.price > 0 && p.name !== 'Produto sem nome');
-    
-    if (newProducts.length === 0) {
-      throw new Error('Nenhum produto válido encontrado na planilha.');
-    }
-    
-    products = newProducts;
-    
-    // Salva no cache
-    setCachedProducts(products);
-    
-    if (!isBackground) {
-      validateCartWithProducts();
-      renderCategoryFilters();
-      applyFilters();
-      showSuccess();
-    } else {
-      // Atualização em background - apenas valida carrinho
-      validateCartWithProducts();
-    }
-    
-  } catch (error) {
-    if (!isBackground) {
-      showStatus(`Erro: ${error.message}`, true);
-      console.error('Erro ao carregar produtos:', error);
-    }
-  } finally {
-    isLoading = false;
-  }
+/* ===== NOVA CATEGORIA "FORA DE ESTOQUE" ===== */
+.out-of-stock-category-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+  color: white !important;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+  border: none !important;
+  border-bottom: 3px solid transparent !important;
 }
 
-// ===== RENDERIZAÇÃO DE CATEGORIAS COM CONTADORES =====
-function renderCategoryFilters() {
-  const clubProducts = products.filter(p => p.clubPrice !== null && p.clubPrice > 0);
-  const outOfStockProducts = products.filter(p => p.status === 'out_of_stock');
-  
-  // Contar produtos por categoria (incluindo fora de estoque)
-  const categoryCount = {};
-  products.forEach(p => {
-    categoryCount[p.category] = (categoryCount[p.category] || 0) + 1;
-  });
-  
-  // Extrair categorias originais
-  const originalCategories = [...new Set(products.map(p => p.category))];
-  
-  // Filtrar e transformar categorias para exibição
-  const displayCategories = [];
-  let hasViaAromaCategories = false;
-  let viaAromaCount = 0;
-  
-  originalCategories.forEach(category => {
-    if (category === 'OLEO ESSENCIAL' || category === 'ESSENCIAS') {
-      if (!hasViaAromaCategories) {
-        displayCategories.push('VIAAROMA');
-        hasViaAromaCategories = true;
-      }
-      viaAromaCount += categoryCount[category] || 0;
-    } else {
-      displayCategories.push(category);
-    }
-  });
-  
-  let categories = [{ 
-    name: 'Todos', 
-    count: products.length
-  }];
-  
-  if (clubProducts.length > 0) {
-    categories.push({ 
-      name: '⭐ Club NatuBrava', 
-      count: clubProducts.length
-    });
-  }
-  
-  displayCategories.forEach(cat => {
-    if (cat === 'VIAAROMA') {
-      categories.push({ 
-        name: cat, 
-        count: viaAromaCount
-      });
-    } else {
-      categories.push({ 
-        name: cat, 
-        count: categoryCount[cat] || 0
-      });
-    }
-  });
-  
-  if (outOfStockProducts.length > 0) {
-    categories.push({ 
-      name: '❌ Fora de Estoque', 
-      count: outOfStockProducts.length
-    });
-  }
-  
-  elements.categoryFilters.innerHTML = categories.map(cat => {
-    let buttonClass = 'category-btn text-sm sm:text-base px-4 py-2 rounded-full';
-    let buttonContent = cat.name;
-    
-    if (cat.name === '⭐ Club NatuBrava') {
-      buttonClass += ' club-category-btn';
-      buttonContent = `<span class="flex items-center"><ion-icon name="star" class="text-yellow-400 mr-1"></ion-icon>Club NatuBrava <span class="ml-2 text-xs bg-white bg-opacity-30 px-2 py-0.5 rounded-full">${cat.count}</span></span>`;
-    } else if (cat.name === '❌ Fora de Estoque') {
-      buttonClass += ' out-of-stock-category-btn';
-      buttonContent = `${cat.name} <span class="text-xs ml-1 bg-red-700 bg-opacity-20 px-2 py-0.5 rounded-full">${cat.count}</span>`;
-    } else {
-      buttonContent = `${cat.name} <span class="text-xs ml-1 bg-green-700 bg-opacity-20 px-2 py-0.5 rounded-full">${cat.count}</span>`;
-    }
-    
-    return `<button class="${buttonClass}" data-category="${cat.name}">${buttonContent}</button>`;
-  }).join('');
+.out-of-stock-category-btn:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%) !important;
+  box-shadow: 0 6px 12px rgba(220, 38, 38, 0.4);
 }
 
-// ===== APLICAR FILTROS E BUSCA =====
-function applyFilters() {
-  const searchTerm = normalizeText(elements.searchBox.value);
-  const searchTerms = searchTerm.split(' ').filter(t => t.length > 0);
-  
-  filteredProducts = products.filter(product => {
-    // Se há busca, SEMPRE buscar em todos os produtos (ignorar categoria)
-    if (searchTerms.length > 0) {
-      const productText = normalizeText(`${product.name} ${product.sku}`);
-      return searchTerms.every(term => productText.includes(term));
-    }
-    
-    // Se não há busca, aplicar filtro de categoria
-    let inCategory = false;
-    if (currentFilter === 'Todos') {
-      inCategory = true;
-    } else if (currentFilter === '⭐ Club NatuBrava') {
-      inCategory = product.clubPrice !== null && product.clubPrice > 0;
-    } else if (currentFilter === 'VIAAROMA') {
-      inCategory = product.category === 'OLEO ESSENCIAL' || product.category === 'ESSENCIAS';
-    } else if (currentFilter === '❌ Fora de Estoque') {
-      inCategory = product.status === 'out_of_stock';
-    } else {
-      inCategory = product.category === currentFilter;
-    }
-    
-    return inCategory;
-  });
-  
-  // Ordenar produtos: disponíveis primeiro, depois club, depois fora de estoque
-  filteredProducts.sort((a, b) => {
-    // Primeiro critério: status (disponível > fora de estoque)
-    if (a.status !== b.status) {
-      const statusOrder = { 'available': 0, 'out_of_stock': 1 };
-      return statusOrder[a.status] - statusOrder[b.status];
-    }
-    
-    // Segundo critério: produtos club primeiro (se ambos estão disponíveis)
-    if (a.status === 'available' && b.status === 'available') {
-      const aHasClub = a.clubPrice !== null && a.clubPrice > 0;
-      const bHasClub = b.clubPrice !== null && b.clubPrice > 0;
-      if (aHasClub && !bHasClub) return -1;
-      if (!aHasClub && bHasClub) return 1;
-    }
-    
-    return 0;
-  });
-  
-  // Calcular páginas
-  totalPages = Math.ceil(filteredProducts.length / CONFIG.ITEMS_PER_PAGE);
-  currentPage = 1;
-  
-  // Renderizar
-  renderProducts();
-  renderPagination();
-  updateProductCounter();
+.out-of-stock-category-btn.active {
+  background: linear-gradient(135deg, #991b1b 0%, #b91c1c 100%) !important;
+  box-shadow: none !important;
+  border-bottom: 3px solid #fca5a5 !important;
 }
 
-// ===== RENDERIZAÇÃO DE PRODUTOS COM PAGINAÇÃO =====
-function renderProducts() {
-  // Calcular índices para paginação
-  const startIndex = (currentPage - 1) * CONFIG.ITEMS_PER_PAGE;
-  const endIndex = startIndex + CONFIG.ITEMS_PER_PAGE;
-  const pageProducts = filteredProducts.slice(startIndex, endIndex);
-  
-  elements.productList.innerHTML = '';
-  elements.noProductsMessage.style.display = pageProducts.length === 0 ? 'block' : 'none';
-  
-  // Use DocumentFragment para melhor performance
-  const fragment = document.createDocumentFragment();
-  
-  pageProducts.forEach(product => {
-    const card = document.createElement('div');
-    const isGranel = product.isGranel;
-    const initialQty = isGranel ? 100 : 1; // VOLTA PARA 100g inicial
-    const hasClubPrice = product.clubPrice !== null && product.clubPrice > 0;
-    const status = product.status;
-    
-    // Definir classes do card baseado no status
-    let cardClass = 'product-card bg-white rounded-lg shadow-md overflow-hidden';
-    if (status === 'out_of_stock') {
-      cardClass += ' out-of-stock-card';
-    }
-    if (hasClubPrice && status !== 'out_of_stock') {
-      cardClass += ' club-product-card';
-    }
-    
-    card.className = cardClass;
-    card.style.animation = 'fadeInUp 0.5s ease-out';
-    card.dataset.id = product.id;
-    
-    // Determinar preços e labels
-    let priceHTML = '';
-    let statusBadgeHTML = '';
-    let quantityControlsHTML = '';
-    let buttonHTML = '';
-    
-    // Badge de status (apenas para fora de estoque)
-    if (status === 'out_of_stock') {
-      statusBadgeHTML = '<div class="status-badge out-of-stock-badge">Produto Indisponível</div>';
-    }
-    
-    // Preços
-    if (hasClubPrice && status !== 'out_of_stock') {
-      const normalPrice = isGranel ? product.price * 100 : product.price;
-      const clubPriceDisplay = isGranel ? product.clubPrice * 100 : product.clubPrice;
-      priceHTML = `
-        <div class="price-container">
-          <div class="normal-price">De: <span class="original-price">R$ ${formatPrice(normalPrice)}${isGranel ? '/100g' : ''}</span></div>
-          <div class="club-price-container">
-            <span class="club-badge">CLUB</span>
-            <span class="club-price">R$ ${formatPrice(clubPriceDisplay)}${isGranel ? '/100g' : ''}</span>
-            <button class="club-info-icon ml-1 text-green-600 hover:text-green-800" onclick="openClubInfoModal()" title="Saiba mais sobre o Club NatuBrava">
-              <ion-icon name="information-circle-outline" class="text-sm"></ion-icon>
-            </button>
-          </div>
-        </div>`;
-    } else {
-      priceHTML = `<span class="text-lg font-bold text-green-700">R$ ${formatPrice(isGranel ? product.price * 100 : product.price)}${isGranel ? '/100g' : ''}</span>`;
-    }
-    
-    // Controles de quantidade e botão
-    if (status === 'out_of_stock') {
-      quantityControlsHTML = '';
-      buttonHTML = `
-        <button class="notify-me-btn w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center space-x-1" data-product-id="${product.id}">
-          <ion-icon name="notifications-outline" class="text-base"></ion-icon>
-          <span>Avise-me assim que chegar</span>
-        </button>`;
-    } else {
-      quantityControlsHTML = `
-        <div class="flex items-center space-x-1">
-          <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="-1" ${isGranel && initialQty <= CONFIG.MIN_GRANEL_QUANTITY ? 'disabled' : ''}><ion-icon name="remove-outline" class="pointer-events-none"></ion-icon></button>
-          <span class="product-quantity font-medium text-base ${isGranel ? 'w-16' : 'w-6'} text-center">${isGranel ? `${initialQty}g` : initialQty}</span>
-          <button class="product-quantity-change p-1 rounded-full bg-gray-100 hover:bg-gray-200" data-change="1"><ion-icon name="add-outline" class="pointer-events-none"></ion-icon></button>
-        </div>`;
-      
-      buttonHTML = `
-        <button class="add-to-cart-btn w-full bg-green-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-green-700 flex items-center justify-center space-x-1">
-          <ion-icon name="cart-outline" class="text-base"></ion-icon>
-          <span>Adicionar</span>
-        </button>`;
-    }
-    
-    // Destacar termos de busca no nome
-    let displayName = product.name;
-    const searchTerm = elements.searchBox.value.trim();
-    if (searchTerm) {
-      const regex = new RegExp(`(${searchTerm.split(' ').join('|')})`, 'gi');
-      displayName = displayName.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
-    }
-    
-    const imageHTML = `
-      <img data-src="${product.image}" 
-           alt="${product.name}" 
-           class="product-image ${status === 'out_of_stock' ? 'grayscale' : ''}" 
-           loading="lazy"
-           onerror="this.parentElement.innerHTML='<div class=\\'product-image-error\\'>Imagem<br>Indisponível</div>'">
-    `;
-    
-    card.innerHTML = `
-      <div class="product-image-container">
-        ${imageHTML}
-        ${statusBadgeHTML}
-      </div>
-      <div class="product-card-content">
-        <h3 class="text-lg font-semibold text-green-800 mb-1">${displayName}</h3>
-        <p class="text-sm text-gray-600 mb-2 flex-grow">Cód.: ${product.sku}</p>
-        <div class="product-card-footer">
-          <div class="flex justify-between items-center mb-3">
-            ${priceHTML}
-            ${quantityControlsHTML}
-          </div>
-          ${isGranel && status !== 'out_of_stock' ? `<div class="text-center mb-2"><span class="text-sm font-semibold text-green-800">Total: R$ <span class="product-total-price">${formatPrice((hasClubPrice ? product.clubPrice : product.price) * initialQty)}</span></span></div>` : ''}
-          ${buttonHTML}
-        </div>
-      </div>`;
-    
-    fragment.appendChild(card);
-  });
-  
-  elements.productList.appendChild(fragment);
-  
-  // Configurar lazy loading para as novas imagens
-  setupLazyLoading();
-  
-  // Atualizar botões de categoria
-  document.querySelectorAll('#category-filters .category-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.category === currentFilter);
-  });
-  
-  // Scroll para o topo suavemente
-  if (currentPage > 1) {
-    elements.produtosSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+.out-of-stock-category-btn span .text-xs {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
-// ===== RENDERIZAR PAGINAÇÃO =====
-function renderPagination() {
-  if (!elements.pagination || totalPages <= 1) {
-    if (elements.pagination) elements.pagination.style.display = 'none';
-    return;
-  }
-  
-  elements.pagination.style.display = 'flex';
-  elements.pagination.innerHTML = '';
-  
-  // Botão anterior
-  const prevBtn = document.createElement('button');
-  prevBtn.className = 'pagination-btn';
-  prevBtn.innerHTML = '<ion-icon name="chevron-back-outline"></ion-icon>';
-  prevBtn.disabled = currentPage === 1;
-  prevBtn.onclick = () => goToPage(currentPage - 1);
-  elements.pagination.appendChild(prevBtn);
-  
-  // Páginas
-  const maxVisiblePages = 5;
-  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-  
-  if (endPage - startPage < maxVisiblePages - 1) {
-    startPage = Math.max(1, endPage - maxVisiblePages + 1);
-  }
-  
-  // Primeira página se não estiver visível
-  if (startPage > 1) {
-    const firstPageBtn = createPageButton(1);
-    elements.pagination.appendChild(firstPageBtn);
-    
-    if (startPage > 2) {
-      const dots = document.createElement('span');
-      dots.className = 'pagination-dots';
-      dots.textContent = '...';
-      elements.pagination.appendChild(dots);
-    }
-  }
-  
-  // Páginas visíveis
-  for (let i = startPage; i <= endPage; i++) {
-    const pageBtn = createPageButton(i);
-    elements.pagination.appendChild(pageBtn);
-  }
-  
-  // Última página se não estiver visível
-  if (endPage < totalPages) {
-    if (endPage < totalPages - 1) {
-      const dots = document.createElement('span');
-      dots.className = 'pagination-dots';
-      dots.textContent = '...';
-      elements.pagination.appendChild(dots);
-    }
-    
-    const lastPageBtn = createPageButton(totalPages);
-    elements.pagination.appendChild(lastPageBtn);
-  }
-  
-  // Botão próximo
-  const nextBtn = document.createElement('button');
-  nextBtn.className = 'pagination-btn';
-  nextBtn.innerHTML = '<ion-icon name="chevron-forward-outline"></ion-icon>';
-  nextBtn.disabled = currentPage === totalPages;
-  nextBtn.onclick = () => goToPage(currentPage + 1);
-  elements.pagination.appendChild(nextBtn);
+/* ===== PADRONIZAÇÃO DE IMAGENS E CARDS ===== */
+.product-card { transition: all 0.3s ease; display: flex; flex-direction: column; height: 100%; min-height: 420px; }
+.product-card:hover { transform: translateY(-2px); }
+.product-image-container { position: relative; width: 100%; height: 220px !important; min-height: 220px; max-height: 220px; overflow: hidden; background-color: #ffffff; border-radius: 0.5rem 0.5rem 0 0; display: flex; align-items: center; justify-content: center; border: 1px solid #f1f5f9; }
+.product-image { width: 100% !important; height: 100% !important; min-height: 220px !important; max-height: 220px !important; object-fit: contain !important; object-position: center !important; transition: transform 0.3s ease; background-color: #fff; display: block; padding: 8px; }
+.product-card:hover .product-image { transform: scale(1.03); }
+.product-image-error { display: flex !important; align-items: center; justify-content: center; width: 100%; height: 220px !important; min-height: 220px !important; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); color: #666; font-size: 0.9rem; text-align: center; padding: 1rem; border: 1px solid #dee2e6; }
+.product-card-content { flex: 1; display: flex; flex-direction: column; padding: 1rem; min-height: 200px; }
+.product-card-footer { margin-top: auto; }
+
+/* ===== NOVOS ESTILOS PARA PRODUTOS FORA DE ESTOQUE ===== */
+.out-of-stock-card {
+  opacity: 0.75;
+  border: 2px solid #ef4444;
+  background-color: #fef2f2;
 }
 
-function createPageButton(pageNumber) {
-  const btn = document.createElement('button');
-  btn.className = 'pagination-btn' + (pageNumber === currentPage ? ' active' : '');
-  btn.textContent = pageNumber;
-  btn.onclick = () => goToPage(pageNumber);
-  return btn;
+.out-of-stock-card:hover {
+  transform: none;
+  opacity: 0.8;
 }
 
-function goToPage(page) {
-  if (page < 1 || page > totalPages) return;
-  currentPage = page;
-  renderProducts();
-  renderPagination();
+/* Imagem em escala de cinza para produtos fora de estoque */
+.product-image.grayscale {
+  filter: grayscale(100%);
+  opacity: 0.6;
 }
 
-// ===== ATUALIZAR CONTADOR DE PRODUTOS =====
-function updateProductCounter() {
-  if (!elements.productCounter) return;
-  
-  const total = filteredProducts.length;
-  const start = total > 0 ? (currentPage - 1) * CONFIG.ITEMS_PER_PAGE + 1 : 0;
-  const end = Math.min(currentPage * CONFIG.ITEMS_PER_PAGE, total);
-  
-  elements.productCounter.innerHTML = `
-    Mostrando <strong>${start}-${end}</strong> de <strong>${total}</strong> produtos
-  `;
+/* ===== BADGES DE STATUS ===== */
+.status-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-// ===== BUSCA OTIMIZADA COM DEBOUNCE =====
-function handleSearch() {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    applyFilters();
-  }, 300);
+.out-of-stock-badge {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  color: white;
+  animation: pulse-out-of-stock 2s infinite;
 }
 
-// ===== CARRINHO & MODAIS (MANTIDOS INTACTOS) =====
-function triggerCartAnimation() {
-  if (elements.cartButton) {
-    elements.cartButton.classList.add('cart-bounce-animation');
-    setTimeout(() => elements.cartButton.classList.remove('cart-bounce-animation'), 400);
-  }
-  if (elements.cartButtonMobile) {
-    elements.cartButtonMobile.classList.add('cart-bounce-animation');
-    setTimeout(() => elements.cartButtonMobile.classList.remove('cart-bounce-animation'), 400);
-  }
+@keyframes pulse-out-of-stock {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
-function addToCart(productId, quantity) {
-  const product = products.find(p => p.id === productId);
-  if (!product) return;
-
-  // Verificar se produto está disponível
-  if (product.status === 'out_of_stock') {
-    showNotification('Este produto não está disponível para compra no momento.');
-    return;
-  }
-
-  // Verificação rigorosa da quantidade mínima para granel
-  if (product.isGranel && quantity < CONFIG.MIN_GRANEL_QUANTITY) {
-    showNotification(`Quantidade mínima para produtos a granel: ${CONFIG.MIN_GRANEL_QUANTITY}g`);
-    return;
-  }
-
-  const existingItem = cart.find(item => item.id === productId);
-  const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
-  const newTotalQuantity = currentQuantityInCart + quantity;
-  const maxStock = product.isGranel ? product.stock * 1000 : product.stock;
-
-  if (newTotalQuantity > maxStock) {
-    const availableStock = maxStock - currentQuantityInCart;
-    showNotification(`Estoque insuficiente. Você pode adicionar mais ${availableStock}${product.isGranel ? 'g' : ' unidade(s)'}.`);
-    return;
-  }
-
-  const finalPrice = product.clubPrice || product.price;
-
-  if (existingItem) {
-    existingItem.quantity = newTotalQuantity;
-    existingItem.price = finalPrice;
-  } else {
-    cart.push({ ...product, quantity, price: finalPrice });
-  }
-  
-  triggerCartAnimation();
-  showNotification(`${product.isGranel ? quantity+'g' : quantity+'x'} de ${product.name} adicionado!`);
-  renderCart();
-  saveCartToLocalStorage();
+/* ===== BOTÃO "AVISE-ME ASSIM QUE CHEGAR" ===== */
+.notify-me-btn {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
 }
 
-function removeFromCart(productId) {
-  cart = cart.filter(item => item.id !== productId);
-  renderCart();
-  saveCartToLocalStorage();
+.notify-me-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.4);
 }
 
-function updateCartQuantity(productId, change) {
-  const itemIndex = cart.findIndex(item => item.id === productId);
-  if (itemIndex === -1) return;
-  const item = cart[itemIndex];
-  
-  const currentProduct = products.find(p => p.id === productId);
-  const step = currentProduct ? (currentProduct.isGranel ? currentProduct.quantityStep : 1) : (item.isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1);
-  const minQty = currentProduct ? (currentProduct.isGranel ? currentProduct.minQuantity : 1) : (item.isGranel ? CONFIG.MIN_GRANEL_QUANTITY : 1);
-  
-  let newQuantity = item.quantity + (change * step);
-  const maxStock = currentProduct ? (currentProduct.isGranel ? currentProduct.stock * 1000 : currentProduct.stock) : 9999;
-
-  if (newQuantity < minQty) {
-    removeFromCart(productId);
-  } else if (newQuantity <= maxStock) {
-    item.quantity = newQuantity;
-    if (currentProduct && currentProduct.clubPrice) {
-      item.price = currentProduct.clubPrice;
-    }
-    renderCart();
-    saveCartToLocalStorage();
-  } else {
-    showNotification(`Estoque máximo atingido: ${maxStock}${item.isGranel ? 'g' : ''}`);
-  }
+.notify-me-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
 }
 
-function renderCart() {
-  elements.cartItems.innerHTML = '';
-  let total = 0;
-  elements.cartEmptyMessage.style.display = cart.length === 0 ? 'block' : 'none';
+/* ===== ESTILOS PARA PREÇOS CLUB ===== */
+.price-container { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.normal-price { font-size: 0.75rem; color: #6b7280; line-height: 1; }
+.original-price { text-decoration: line-through; font-weight: 500; }
+.club-price-container { display: flex; align-items: center; gap: 4px; }
+.club-badge { background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; font-size: 0.6rem; font-weight: 700; padding: 2px 6px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3); animation: pulse-club 2s infinite; }
+.club-price { font-size: 1rem; font-weight: 700; color: #059669; text-shadow: 0 1px 2px rgba(5, 150, 105, 0.1); }
+.club-info-icon { opacity: 0.7; transition: all 0.2s ease; cursor: pointer; }
+.club-info-icon:hover { opacity: 1; transform: scale(1.1); }
+@keyframes pulse-club { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.product-card { animation: fadeInUp 0.4s ease-out; }
 
-  if (cart.length > 0) {
-    cart.forEach(item => {
-      const itemTotal = item.price * item.quantity;
-      total += itemTotal;
-      const itemElement = document.createElement('div');
-      itemElement.className = 'flex items-center justify-between border-b pb-3 pt-1';
-      
-      itemElement.innerHTML = `
-        <div class="flex items-center space-x-3 flex-grow min-w-0">
-          <img src="${item.image}" alt="${item.name}" class="w-12 h-12 rounded object-cover flex-shrink-0">
-          <div class="flex-grow min-w-0">
-            <p class="font-medium text-sm truncate">${item.name}</p>
-            <div class="flex items-center space-x-1 mt-1">
-              <button class="cart-quantity-change text-gray-500 hover:text-black p-0.5 rounded bg-gray-100 hover:bg-gray-200" data-id="${item.id}" data-change="-1">
-                <ion-icon name="remove-outline" class="text-sm pointer-events-none"></ion-icon>
-              </button>
-              <span class="text-sm font-medium w-12 text-center">${item.isGranel ? `${item.quantity}g` : item.quantity}</span>
-              <button class="cart-quantity-change text-gray-500 hover:text-black p-0.5 rounded bg-gray-100 hover:bg-gray-200" data-id="${item.id}" data-change="1">
-                <ion-icon name="add-outline" class="text-sm pointer-events-none"></ion-icon>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="flex flex-col items-end justify-center ml-2">
-          <span class="font-semibold text-sm">R$ ${formatPrice(itemTotal)}</span>
-          <button class="remove-item text-red-500 text-lg p-1 mt-1" data-id="${item.id}"><ion-icon name="trash-outline" class="pointer-events-none"></ion-icon></button>
-        </div>`;
-      elements.cartItems.appendChild(itemElement);
-    });
-  }
-  
-  const cartLength = cart.length;
-  if (elements.cartCount) {
-    elements.cartCount.textContent = cartLength;
-  }
-  if (elements.cartCountMobile) {
-    elements.cartCountMobile.textContent = cartLength;
-  }
-  
-  elements.cartTotal.textContent = `R$ ${formatPrice(total)}`;
-  elements.checkoutButton.disabled = cart.length === 0;
+/* ===== Melhorias Granel e Botões de Quantidade ===== */
+.product-card .product-quantity { min-width: 48px; font-weight: 600; color: #15803d; }
+.product-card .product-total-price { font-weight: 600; color: #15803d; }
+.product-quantity-change, .cart-quantity-change { transition: all 0.2s ease; min-width: 28px; min-height: 28px; display: flex; align-items: center; justify-content: center; }
+.product-quantity-change:hover:not(:disabled), .cart-quantity-change:hover:not(:disabled) { background-color: #15803d; color: white; transform: scale(1.1); }
+.product-quantity-change:disabled, .cart-quantity-change:disabled { background-color: #f3f4f6; color: #9ca3af; }
+
+/* ===== MELHORIAS NO CARD PARA PRODUTOS CLUB ===== */
+.club-product-card {
+  border: 2px solid #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
 }
 
-// ===== MODAIS (MANTIDOS E EXPANDIDOS) =====
-function openCartPanel() { 
-  elements.cartPanel.classList.add('open'); 
-  elements.cartOverlay.classList.add('open'); 
-  document.body.style.overflow = 'hidden';
+.club-product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
 }
 
-function closeCartPanel() { 
-  elements.cartPanel.classList.remove('open'); 
-  elements.cartOverlay.classList.remove('open'); 
-  document.body.style.overflow = '';
+/* ===== RESPONSIVIDADE GERAL ===== */
+@media (max-width: 640px) {
+  .cart-panel { max-width: 100%; }
+  .product-card { margin-bottom: 1rem; min-height: 400px; }
+  .product-image-container, .product-image, .product-image-error { height: 180px !important; min-height: 180px !important; max-height: 180px !important; }
+  .product-card-content { min-height: 200px; }
+  .product-card h3 { font-size: 1rem; line-height: 1.2; }
+  .product-card .text-lg { font-size: 1rem; }
+  .cart-items .text-sm { font-size: 0.8rem; }
+  .product-quantity-change, .cart-quantity-change { min-width: 36px; min-height: 36px; }
+  .product-card .product-quantity { min-width: 56px; font-size: 0.9rem; }
+  .club-badge { font-size: 0.55rem; padding: 1px 4px; }
+  .club-price { font-size: 0.9rem; }
+  .normal-price { font-size: 0.7rem; }
+  .club-category-btn { padding: 8px 12px !important; font-size: 0.8rem; }
+  .status-badge { font-size: 0.6rem; padding: 3px 6px; }
+  .notify-me-btn { font-size: 0.85rem; padding: 8px 12px; }
 }
 
-function openNameModal() { 
-  elements.nameModalOverlay.classList.add('open'); 
-  elements.nameModalOverlay.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  setTimeout(() => {
-    elements.nameModal.style.transform = 'scale(1)';
-    elements.nameModal.style.opacity = '1';
-  }, 50);
+@media (min-width: 1024px) {
+  .product-image-container, .product-image, .product-image-error { height: 240px !important; min-height: 240px !important; max-height: 240px !important; }
+  .product-card { min-height: 470px; }
 }
 
-function closeNameModal() {
-  elements.nameModal.style.transform = 'scale(0.95)';
-  elements.nameModal.style.opacity = '0';
-  setTimeout(() => {
-    elements.nameModalOverlay.classList.remove('open');
-    elements.nameModalOverlay.style.display = 'none';
-    document.body.style.overflow = '';
-  }, 300);
-  elements.nameError.classList.add('hidden');
-  elements.clientNameInput.classList.remove('border-red-500');
-  elements.clientNameInput.value = '';
-  elements.clientObservation.value = '';
+/* ===== Notificações, Modais e Otimizações Finais ===== */
+.cart-notification { box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); backdrop-filter: blur(10px); max-width: 300px; word-wrap: break-word; transition: all 0.3s ease; }
+@media (max-width: 640px) {
+  #name-modal, #delivery-modal, #club-info-modal, #notify-modal { margin: 1rem; max-height: 90vh; overflow-y: auto; max-width: calc(100vw - 2rem); }
+  #name-modal, #notify-modal { padding: 1.5rem; }
+  #name-modal h3, #notify-modal h3 { font-size: 1.25rem; }
+  #name-modal .text-sm, #notify-modal .text-sm { font-size: 0.875rem; }
+  #name-modal .text-xs, #notify-modal .text-xs { font-size: 0.75rem; }
 }
-
-// ===== NOVO MODAL "AVISE-ME" =====
-function openNotifyModal(productId) {
-  const product = products.find(p => p.id === productId);
-  if (!product) return;
-  
-  // Definir dados do produto no modal
-  document.getElementById('notify-product-name').textContent = product.name;
-  document.getElementById('notify-product-sku').textContent = product.sku;
-  
-  elements.notifyModalOverlay.classList.add('open');
-  elements.notifyModalOverlay.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  setTimeout(() => {
-    elements.notifyModal.style.transform = 'scale(1)';
-    elements.notifyModal.style.opacity = '1';
-  }, 50);
-  
-  // Armazenar ID do produto no modal
-  elements.notifyModal.dataset.productId = productId;
-}
-
-function closeNotifyModal() {
-  elements.notifyModal.style.transform = 'scale(0.95)';
-  elements.notifyModal.style.opacity = '0';
-  setTimeout(() => {
-    elements.notifyModalOverlay.classList.remove('open');
-    elements.notifyModalOverlay.style.display = 'none';
-    document.body.style.overflow = '';
-  }, 300);
-  
-  // Limpar formulário
-  elements.notifyError.classList.add('hidden');
-  elements.clientNotifyName.classList.remove('border-red-500');
-  elements.clientNotifyPhone.classList.remove('border-red-500');
-  elements.clientNotifyName.value = '';
-  elements.clientNotifyPhone.value = '';
-  elements.clientNotifyObservation.value = '';
-  delete elements.notifyModal.dataset.productId;
-}
-
-function sendNotifyRequest() {
-  const productId = parseInt(elements.notifyModal.dataset.productId);
-  const product = products.find(p => p.id === productId);
-  if (!product) return;
-  
-  const clientName = elements.clientNotifyName.value.trim();
-  const clientPhone = elements.clientNotifyPhone.value.trim();
-  const observation = elements.clientNotifyObservation.value.trim();
-  
-  // Validação
-  let hasError = false;
-  if (!clientName) {
-    elements.clientNotifyName.classList.add('border-red-500');
-    hasError = true;
-  } else {
-    elements.clientNotifyName.classList.remove('border-red-500');
-  }
-  
-  if (!clientPhone) {
-    elements.clientNotifyPhone.classList.add('border-red-500');
-    hasError = true;
-  } else {
-    elements.clientNotifyPhone.classList.remove('border-red-500');
-  }
-  
-  if (hasError) {
-    elements.notifyError.classList.remove('hidden');
-    return;
-  }
-  
-  elements.notifyError.classList.add('hidden');
-  
-  // Montar mensagem
-  let message = `🔔 *AVISO DE INTERESSE EM PRODUTO*\n\n`;
-  message += `*Cliente:* ${clientName}\n`;
-  message += `*Telefone:* ${clientPhone}\n\n`;
-  message += `*PRODUTO SOLICITADO*\n`;
-  message += `*Nome:* ${product.name}\n`;
-  message += `*SKU:* ${product.sku}\n`;
-  message += `*Categoria:* ${product.category}\n\n`;
-  
-  if (observation) {
-    message += `*Observações do cliente:* ${observation}\n\n`;
-  }
-  
-  message += `📋 *O cliente gostaria de ser avisado quando este produto voltar ao estoque.*\n\n`;
-  message += `⚠️ *Status atual:* Produto Indisponível\n`;
-  message += `📞 *Contato do cliente:* ${clientPhone}\n\n`;
-  message += `✅ Por favor, incluir este cliente na lista de interessados no produto e avisar quando houver reestoque.\n\n`;
-  message += `Mensagem enviada automaticamente pelo site NatuBrava.`;
-  
-  // Enviar via WhatsApp
-  window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
-  
-  // Fechar modal e mostrar confirmação
-  closeNotifyModal();
-  showNotification('✅ Seu interesse foi registrado! Entraremos em contato quando o produto estiver disponível.', 5000);
-}
-
-function openDeliveryModal() { 
-  elements.deliveryModalOverlay.classList.add('open'); 
-  elements.deliveryModalOverlay.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  setTimeout(() => {
-    document.querySelector('#delivery-modal').style.transform = 'scale(1)';
-    document.querySelector('#delivery-modal').style.opacity = '1';
-  }, 50);
-}
-
-function closeDeliveryModal() { 
-  document.querySelector('#delivery-modal').style.transform = 'scale(0.95)';
-  document.querySelector('#delivery-modal').style.opacity = '0';
-  setTimeout(() => {
-    elements.deliveryModalOverlay.classList.remove('open'); 
-    elements.deliveryModalOverlay.style.display = 'none';
-    document.body.style.overflow = '';
-  }, 300);
-}
-
-function openClubInfoModal() { 
-  elements.clubInfoModalOverlay.classList.add('open'); 
-  elements.clubInfoModalOverlay.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  setTimeout(() => {
-    document.querySelector('#club-info-modal').style.transform = 'scale(1)';
-    document.querySelector('#club-info-modal').style.opacity = '1';
-  }, 50);
-}
-
-function closeClubInfoModal() { 
-  document.querySelector('#club-info-modal').style.transform = 'scale(0.95)';
-  document.querySelector('#club-info-modal').style.opacity = '0';
-  setTimeout(() => {
-    elements.clubInfoModalOverlay.classList.remove('open'); 
-    elements.clubInfoModalOverlay.style.display = 'none';
-    document.body.style.overflow = '';
-  }, 300);
-}
-
-function toggleMobileMenu() {
-  const isOpen = !elements.mobileMenu.classList.contains('hidden');
-  if (isOpen) {
-    elements.mobileMenu.classList.add('hidden');
-    elements.mobileMenuButton.innerHTML = '<ion-icon name="menu-outline" class="text-2xl"></ion-icon>';
-  } else {
-    elements.mobileMenu.classList.remove('hidden');
-    elements.mobileMenuButton.innerHTML = '<ion-icon name="close-outline" class="text-2xl"></ion-icon>';
-  }
-}
-
-function closeMobileMenu() {
-  elements.mobileMenu.classList.add('hidden');
-  elements.mobileMenuButton.innerHTML = '<ion-icon name="menu-outline" class="text-2xl"></ion-icon>';
-}
-
-function showNotification(message, duration = 3000) {
-  const notification = document.createElement('div');
-  notification.className = 'cart-notification fixed bottom-5 right-5 bg-green-600 text-white py-2 px-4 rounded-lg shadow-lg z-50';
-  notification.textContent = message;
-  document.body.appendChild(notification);
-  setTimeout(() => notification.remove(), duration);
-}
-
-// ===== SCROLL TO TOP =====
-function handleScroll() {
-  if (elements.backToTop) {
-    if (window.pageYOffset > CONFIG.SCROLL_THRESHOLD) {
-      elements.backToTop.classList.add('show');
-    } else {
-      elements.backToTop.classList.remove('show');
-    }
-  }
-}
-
-function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ===== EVENT LISTENERS OTIMIZADOS =====
-function setupEventListeners() {
-  // Carrinho
-  if (elements.cartButton) {
-    elements.cartButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      openCartPanel();
-    });
-  }
-  
-  if (elements.cartButtonMobile) {
-    elements.cartButtonMobile.addEventListener('click', (e) => {
-      e.preventDefault();
-      openCartPanel();
-    });
-  }
-  
-  elements.closeCartButton.addEventListener('click', closeCartPanel);
-  elements.cartOverlay.addEventListener('click', closeCartPanel);
-  elements.retryButton.addEventListener('click', loadProducts);
-  
-  // Busca com debounce
-  elements.searchBox.addEventListener('input', handleSearch);
-  
-  // Scroll to top
-  if (elements.backToTop) {
-    elements.backToTop.addEventListener('click', scrollToTop);
-  }
-  
-  // Monitorar scroll
-  window.addEventListener('scroll', handleScroll);
-  
-  // Modais de informação
-  if (elements.deliveryInfoButton) {
-    elements.deliveryInfoButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      openDeliveryModal();
-    });
-  }
-  
-  if (elements.closeDeliveryModalButton) {
-    elements.closeDeliveryModalButton.addEventListener('click', closeDeliveryModal);
-  }
-  
-  if (elements.okDeliveryModalButton) {
-    elements.okDeliveryModalButton.addEventListener('click', closeDeliveryModal);
-  }
-  
-  if (elements.deliveryModalOverlay) {
-    elements.deliveryModalOverlay.addEventListener('click', (e) => {
-      if (e.target === elements.deliveryModalOverlay) closeDeliveryModal();
-    });
-  }
-
-  if (elements.clubInfoButton) {
-    elements.clubInfoButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      openClubInfoModal();
-    });
-  }
-  
-  if (elements.clubInfoButtonMobile) {
-    elements.clubInfoButtonMobile.addEventListener('click', (e) => {
-      e.preventDefault();
-      closeMobileMenu();
-      openClubInfoModal();
-    });
-  }
-  
-  if (elements.deliveryInfoButtonMobile) {
-    elements.deliveryInfoButtonMobile.addEventListener('click', (e) => {
-      e.preventDefault();
-      closeMobileMenu();
-      openDeliveryModal();
-    });
-  }
-  
-  if (elements.closeClubModalButton) {
-    elements.closeClubModalButton.addEventListener('click', closeClubInfoModal);
-  }
-  
-  if (elements.clubInfoModalOverlay) {
-    elements.clubInfoModalOverlay.addEventListener('click', (e) => {
-      if (e.target === elements.clubInfoModalOverlay) closeClubInfoModal();
-    });
-  }
-
-  // Menu mobile
-  if (elements.mobileMenuButton) {
-    elements.mobileMenuButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      toggleMobileMenu();
-    });
-  }
-
-  elements.mobileMenu.addEventListener('click', (e) => {
-    if (e.target.tagName === 'A') {
-      closeMobileMenu();
-    }
-  });
-
-  // ===== NOVOS EVENT LISTENERS PARA MODAL "AVISE-ME" =====
-  if (elements.closeNotifyModalButton) {
-    elements.closeNotifyModalButton.addEventListener('click', closeNotifyModal);
-  }
-  
-  if (elements.cancelNotifyButton) {
-    elements.cancelNotifyButton.addEventListener('click', closeNotifyModal);
-  }
-  
-  if (elements.confirmNotifyButton) {
-    elements.confirmNotifyButton.addEventListener('click', sendNotifyRequest);
-  }
-  
-  if (elements.notifyModalOverlay) {
-    elements.notifyModalOverlay.addEventListener('click', (e) => {
-      if (e.target === elements.notifyModalOverlay) closeNotifyModal();
-    });
-  }
-
-  // Filtros de categoria
-  elements.categoryFilters.addEventListener('click', e => {
-    if (e.target.matches('.category-btn') || e.target.closest('.category-btn')) {
-      const button = e.target.closest('.category-btn') || e.target;
-      currentFilter = button.dataset.category;
-      applyFilters();
-    }
-  });
-
-  // Produtos (delegação de eventos)
-  elements.productList.addEventListener('click', e => {
-    const card = e.target.closest('.product-card');
-    if (!card) return;
-    
-    const productId = parseInt(card.dataset.id);
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-    
-    // Botão "Avise-me assim que chegar"
-    if (e.target.closest('.notify-me-btn')) {
-      e.preventDefault();
-      e.stopPropagation();
-      openNotifyModal(productId);
-      return;
-    }
-    
-    const qtySpan = card.querySelector('.product-quantity');
-    const isGranel = product.isGranel;
-    const hasClubPrice = product.clubPrice !== null && product.clubPrice > 0;
-
-    if (e.target.closest('.add-to-cart-btn')) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      let quantityText = qtySpan.textContent.trim();
-      let quantity;
-      
-      if (isGranel) {
-        quantity = parseInt(quantityText.replace('g', ''));
-      } else {
-        quantity = parseInt(quantityText);
-      }
-      
-      if (isNaN(quantity) || quantity <= 0) {
-        showNotification('Erro: quantidade inválida');
-        return;
-      }
-      
-      // Verificação adicional da quantidade mínima
-      if (isGranel && quantity < CONFIG.MIN_GRANEL_QUANTITY) {
-        showNotification(`Quantidade mínima: ${CONFIG.MIN_GRANEL_QUANTITY}g`);
-        return;
-      }
-      
-      addToCart(productId, quantity);
-    } 
-    else if (e.target.closest('.product-quantity-change')) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      const change = parseInt(e.target.closest('[data-change]').dataset.change);
-      let currentQty = parseInt(qtySpan.textContent.replace('g', ''));
-      let newQty = currentQty + (isGranel ? change * product.quantityStep : change);
-      const min = isGranel ? product.minQuantity : 1;
-      const max = isGranel ? product.stock * 1000 : product.stock;
-
-      if (newQty >= min && newQty <= max) {
-        qtySpan.textContent = isGranel ? `${newQty}g` : newQty;
-        if (isGranel) {
-          const priceToUse = hasClubPrice ? product.clubPrice : product.price;
-          card.querySelector('.product-total-price').textContent = formatPrice(priceToUse * newQty);
-        }
-        card.querySelector('[data-change="-1"]').disabled = newQty <= min;
-        card.querySelector('[data-change="1"]').disabled = newQty >= max;
-      }
-    }
-  });
-
-  // Carrinho (delegação de eventos)
-  elements.cartItems.addEventListener('click', e => {
-    const removeButton = e.target.closest('.remove-item');
-    if (removeButton) {
-      removeFromCart(parseInt(removeButton.dataset.id));
-      return;
-    }
-    
-    const quantityButton = e.target.closest('.cart-quantity-change');
-    if (quantityButton) {
-      updateCartQuantity(parseInt(quantityButton.dataset.id), parseInt(quantityButton.dataset.change));
-    }
-  });
-
-  // Checkout
-  elements.checkoutButton.addEventListener('click', () => {
-    if (cart.length > 0) openNameModal();
-  });
-  
-  elements.cancelCheckoutButton.addEventListener('click', closeNameModal);
-  
-  elements.confirmCheckoutButton.addEventListener('click', () => {
-    const clientName = elements.clientNameInput.value.trim();
-    if (!clientName) {
-      elements.nameError.classList.remove('hidden');
-      elements.clientNameInput.classList.add('border-red-500');
-      return;
-    }
-    
-    const observation = elements.clientObservation.value.trim();
-    
-    let total = 0;
-    let message = `Olá NatuBrava!\n*Pedido de:* ${clientName}\n\n*RESUMO DO PEDIDO*\n`;
-    cart.forEach(item => {
-      const itemTotal = item.price * item.quantity;
-      total += itemTotal;
-      
-      const originalProduct = products.find(p => p.id === item.id);
-      const isClubPrice = originalProduct && originalProduct.clubPrice && item.price === originalProduct.clubPrice;
-      const priceLabel = isClubPrice ? ' (CLUB NATUBRAVA)' : '';
-      
-      message += `-----------------------------------\n*Produto:* ${item.name}${priceLabel}\n*SKU:* ${item.sku}\n*Quantidade:* ${item.isGranel ? `${item.quantity}g` : `Qtd: ${item.quantity}`}\n*Subtotal:* R$ ${formatPrice(itemTotal)}\n`;
-    });
-    message += `-----------------------------------\n\n*TOTAL GERAL: R$ ${formatPrice(total)}*\n`;
-    
-    if (observation) {
-        message += `\n*Observações:* ${observation}\n`;
-    }
-
-    message += `\n📋 *Este pedido é para confirmação de estoque e valores.*\nEstou ciente de que os preços apresentados no catálogo online são informativos e podem sofrer alterações.\n\n✅ Aguardo confirmação de disponibilidade e valores atualizados.\n\nObrigado!`;
-    
-    window.open(`https://wa.me/${CONFIG.WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank');
-    
-    closeNameModal();
-  });
-  
-  // Teclas de atalho
-  document.addEventListener('keydown', (e) => {
-    if(e.key === 'Escape') {
-      closeCartPanel();
-      closeNameModal();
-      closeDeliveryModal();
-      closeClubInfoModal();
-      closeNotifyModal();
-      closeMobileMenu();
-    }
-  });
-}
-
-// ===== FUNÇÃO GLOBAL PARA MODAL DO CLUB =====
-window.openClubInfoModal = openClubInfoModal;
-
-// ===== INICIALIZAÇÃO =====
-document.addEventListener('DOMContentLoaded', () => {
-  elements.currentYear.textContent = new Date().getFullYear();
-  setupEventListeners();
-  loadInitialCart();
-  loadProducts();
-});
+#name-modal .bg-green-100, #notify-modal .bg-blue-50 { background-color: #dcfce7; }
+#name-modal input:focus, #name-modal textarea:focus, #notify-modal input:focus, #notify-modal textarea:focus { ring-width: 2px; ring-color: #10b981; border-color: #10b981; }
+#notify-modal input:focus, #notify-modal textarea:focus { ring-color: #3b82f6; border-color: #3b82f6; }
+#name-modal button, #notify-modal button { font-weight: 500; }
+#name-modal button:focus, #notify-modal button:focus { outline: none; ring-2: #10b981; ring-offset-2; }
+#notify-modal button:focus { ring-2: #3b82f6; }
+#mobile-menu { animation: slideDown 0.3s ease-out; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+#mobile-menu button { border: none; background: none; text-align: left; transition: all 0.2s ease; }
+#mobile-menu button:hover, #mobile-menu a:hover { background-color: #f0fdf4; border-radius: 8px; transform: translateX(4px); }
+#mobile-menu-button { transition: transform 0.3s ease; }
+#mobile-menu-button:active { transform: scale(0.95); }
+.cart-items img { width: 3rem; height: 3rem; object-fit: cover; border-radius: 0.375rem; background-color: #f8f9fa; }
+.product-card:has(.club-badge) { border: 2px solid #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15); }
+.product-card:has(.club-badge):hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25); }
+.product-card, .cart-panel, .loading-spinner, .cart-notification { will-change: transform; }
+h1, h2, h3, h4, h5, h6 { text-rendering: optimizeLegibility; }
+@media (max-width: 768px) { body { -webkit-overflow-scrolling: touch; } }
+input, textarea, select { font-size: 1rem; line-height: 1.5rem; }
+input:focus, textarea:focus { --tw-ring-offset-width: 0px; --tw-ring-color: #22c55e; }
+button { font-size: inherit; font-family: inherit; font-weight: inherit; line-height: inherit; color: inherit; }
