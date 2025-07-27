@@ -537,9 +537,9 @@ function renderCategoryFilters() {
 function applyFilters() {
   const searchTerm = normalizeText(elements.searchBox.value);
   const searchTerms = searchTerm.split(' ').filter(t => t.length > 0);
-  
+
   filteredProducts = products.filter(product => {
-    // Filtro de categoria
+    // Filtro de categoria (lógica original mantida)
     let inCategory = false;
     if (currentFilter === 'Todos') {
       inCategory = true;
@@ -552,13 +552,21 @@ function applyFilters() {
     }
     
     // Filtro de busca (nome + SKU)
-    let matchesSearch = true;
+    let matchesSearch = false; // Inicia como falso
     if (searchTerms.length > 0) {
       const productText = normalizeText(`${product.name} ${product.sku}`);
       matchesSearch = searchTerms.every(term => productText.includes(term));
     }
-    
-    return inCategory && matchesSearch;
+
+    // ===== LÓGICA ALTERADA =====
+    // Se o usuário estiver pesquisando ativamente (caixa de busca não está vazia)...
+    if (searchTerms.length > 0) {
+      // ...retorna apenas os produtos que correspondem à busca, ignorando a categoria.
+      return matchesSearch;
+    } else {
+      // ...se a busca estiver vazia, aplica o filtro de categoria normalmente.
+      return inCategory;
+    }
   });
   
   // Ordenar produtos Club primeiro se estiver na categoria Club
