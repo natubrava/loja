@@ -56,7 +56,6 @@
 }
 
 /* ===== CORREÇÕES HEADER ===== */
-/* Garante que botões no menu desktop tenham fundo transparente como os links */
 header nav button {
   background-color: transparent;
 }
@@ -74,841 +73,236 @@ header nav button {
 }
 
 /* ===== CORREÇÕES PARA LAYOUT SHIFT (CLS) ===== */
+header { min-height: 80px; }
+header nav { min-height: 60px; }
+header img[alt="Logo da NatuBrava"] { width: 160px !important; height: 60px !important; object-fit: contain; }
+.bg-gradient-to-r { min-height: 200px; }
+#sobre { min-height: 500px; }
+#category-filters { min-height: 50px; }
+.max-w-xl.mx-auto.mb-6 { min-height: 80px; }
+body { font-display: swap; }
 
-/* 1. Header com altura mínima fixa */
-header {
-  min-height: 80px;
-}
+/* ===== ESTILOS PARA PAGINAÇÃO ===== */
+#pagination { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem; flex-wrap: wrap; }
+.pagination-btn { min-width: 40px; height: 40px; padding: 0.5rem; border: 2px solid #e5e7eb; background-color: white; color: #374151; font-weight: 500; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; }
+.pagination-btn:hover:not(:disabled) { background-color: #10b981; color: white; border-color: #10b981; transform: translateY(-1px); }
+.pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pagination-btn.active { background-color: #15803d; color: white; border-color: #15803d; }
+.pagination-dots { padding: 0 0.5rem; color: #9ca3af; }
 
-header nav {
-  min-height: 60px;
-}
+/* ===== ESTILOS PARA CONTADOR DE PRODUTOS ===== */
+#product-counter { font-size: 0.875rem; color: #4b5563; margin-bottom: 1rem; }
+#product-counter strong { color: #15803d; font-weight: 600; }
 
-/* 2. Logo com dimensões fixas para evitar shift */
-header img[alt="Logo da NatuBrava"] {
-  width: 160px !important;
-  height: 60px !important;
-  object-fit: contain;
-}
+/* ===== ESTILOS PARA BOTÃO VOLTAR AO TOPO ===== */
+.back-to-top { position: fixed; bottom: 2rem; right: 2rem; width: 48px; height: 48px; background-color: #15803d; color: white; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 40; box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3); }
+.back-to-top.show { opacity: 1; visibility: visible; }
+.back-to-top:hover { background-color: #166534; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(21, 128, 61, 0.4); }
+.back-to-top:active { transform: translateY(0); }
 
-/* 3. Seções com altura mínima para evitar shift durante carregamento */
-.bg-gradient-to-r {
-  min-height: 200px;
-}
-
-#sobre {
-  min-height: 500px;
-}
-
-/* 4. Container de filtros com altura mínima */
-#category-filters {
-  min-height: 50px;
-}
-
-/* 5. Container de busca com altura mínima */
-.max-w-xl.mx-auto.mb-6 {
-  min-height: 80px;
-}
-
-/* 6. Fonte web com fallback para evitar shift */
-body {
-  font-display: swap;
-}
-
-/* ===== ESTILOS PARA PAGINAÇÃO (NOVO) ===== */
-#pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 2rem;
-  flex-wrap: wrap;
-}
-
-.pagination-btn {
-  min-width: 40px;
-  height: 40px;
-  padding: 0.5rem;
-  border: 2px solid #e5e7eb;
-  background-color: white;
-  color: #374151;
-  font-weight: 500;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background-color: #10b981;
-  color: white;
-  border-color: #10b981;
-  transform: translateY(-1px);
-}
-
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-btn.active {
-  background-color: #15803d;
-  color: white;
-  border-color: #15803d;
-}
-
-.pagination-dots {
-  padding: 0 0.5rem;
-  color: #9ca3af;
-}
-
-/* ===== ESTILOS PARA CONTADOR DE PRODUTOS (NOVO) ===== */
-#product-counter {
-  font-size: 0.875rem;
-  color: #4b5563;
-  margin-bottom: 1rem;
-}
-
-#product-counter strong {
-  color: #15803d;
-  font-weight: 600;
-}
-
-/* ===== ESTILOS PARA BOTÃO VOLTAR AO TOPO (NOVO) ===== */
-.back-to-top {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  width: 48px;
-  height: 48px;
-  background-color: #15803d;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-  z-index: 40;
-  box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
-}
-
-.back-to-top.show {
-  opacity: 1;
-  visibility: visible;
-}
-
-.back-to-top:hover {
-  background-color: #166534;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(21, 128, 61, 0.4);
-}
-
-.back-to-top:active {
-  transform: translateY(0);
-}
-
-/* ===== DESTAQUE DE BUSCA (NOVO) ===== */
-mark {
-  background-color: #fef08a;
-  color: inherit;
-  padding: 0 0.125rem;
-  border-radius: 0.125rem;
-}
+/* ===== DESTAQUE DE BUSCA ===== */
+mark { background-color: #fef08a; color: inherit; padding: 0 0.125rem; border-radius: 0.125rem; }
 
 /* ===== ESTILOS RESPONSIVOS PARA NOVOS ELEMENTOS ===== */
 @media (max-width: 640px) {
-  .pagination-btn {
-    min-width: 36px;
-    height: 36px;
-    font-size: 0.875rem;
-  }
-  
-  .back-to-top {
-    bottom: 1.5rem;
-    right: 1.5rem;
-    width: 40px;
-    height: 40px;
-    font-size: 1.25rem;
-  }
-  
-  #product-counter {
-    font-size: 0.75rem;
-  }
+  .pagination-btn { min-width: 36px; height: 36px; font-size: 0.875rem; }
+  .back-to-top { bottom: 1.5rem; right: 1.5rem; width: 40px; height: 40px; font-size: 1.25rem; }
+  #product-counter { font-size: 0.75rem; }
 }
 
-/* ===== CÓDIGO ORIGINAL DO STYLES.CSS ===== */
-
-/* Font */
-body {
-  font-family: 'Inter', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-html {
-  scroll-behavior: smooth;
-}
+/* ===== CÓDIGO GERAL ===== */
+body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+html { scroll-behavior: smooth; }
 
 /* Loading Spinner */
-.loading-spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #15803d;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto;
-  transform: translateZ(0);
-}
+.loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid #15803d; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; transform: translateZ(0); }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes cart-bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+.cart-bounce-animation { animation: cart-bounce 0.4s ease-in-out; }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+/* Painel do Carrinho e Modais */
+.cart-panel { transition: transform 0.3s ease-in-out; transform: translateX(100%); backface-visibility: hidden; }
+.cart-panel.open { transform: translateX(0); }
+.cart-overlay, #name-modal-overlay, #delivery-modal-overlay, #club-info-modal-overlay { transition: opacity 0.3s ease-in-out; opacity: 0; pointer-events: none; }
+.cart-overlay.open, #name-modal-overlay.open, #delivery-modal-overlay.open, #club-info-modal-overlay.open { opacity: 1; pointer-events: auto; }
+#name-modal-overlay, #delivery-modal-overlay, #club-info-modal-overlay { display: none; }
+#name-modal-overlay.open, #delivery-modal-overlay.open, #club-info-modal-overlay.open { display: flex !important; }
+#name-modal, #delivery-modal, #club-info-modal { transform: scale(0.95); opacity: 0; transition: all 0.3s ease-in-out; }
+#name-modal-overlay.open #name-modal, #delivery-modal-overlay.open #delivery-modal, #club-info-modal-overlay.open #club-info-modal { transform: scale(1); opacity: 1; }
+.cart-items { scrollbar-width: thin; scrollbar-color: #c1c1c1 #f1f1f1; }
+.cart-items::-webkit-scrollbar { width: 6px; }
+.cart-items::-webkit-scrollbar-track { background: #f1f1f1; }
+.cart-items::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+.cart-items::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+.add-to-cart-btn:active, .product-quantity-change:active, .category-btn:active, .cart-quantity-change:active { transform: scale(0.95); }
+.product-quantity-change:disabled, .cart-quantity-change:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
-/* Animação de Destaque do Carrinho */
-@keyframes cart-bounce {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.25); }
-}
+/* Filtros de categoria roláveis */
+#category-filters { display: flex; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+#category-filters::-webkit-scrollbar { display: none; }
+#category-filters .category-btn { flex-shrink: 0; }
 
-.cart-bounce-animation {
-  animation: cart-bounce 0.4s ease-in-out;
-}
-
-/* Painel do Carrinho */
-.cart-panel {
-  transition: transform 0.3s ease-in-out;
-  transform: translateX(100%);
-  backface-visibility: hidden;
-}
-
-.cart-panel.open {
-  transform: translateX(0);
-}
-
-/* Overlay do Carrinho e Modais */
-.cart-overlay, #name-modal-overlay, #delivery-modal-overlay, #club-info-modal-overlay {
-  transition: opacity 0.3s ease-in-out;
-  opacity: 0;
-  pointer-events: none;
-}
-.cart-overlay.open, #name-modal-overlay.open, #delivery-modal-overlay.open, #club-info-modal-overlay.open {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Modais - garantindo que apareçam corretamente */
-#name-modal-overlay, #delivery-modal-overlay, #club-info-modal-overlay {
-  display: none;
-}
-#name-modal-overlay.open, #delivery-modal-overlay.open, #club-info-modal-overlay.open {
-  display: flex !important;
-}
-
-/* Animação dos modais */
-#name-modal, #delivery-modal, #club-info-modal {
-  transform: scale(0.95);
-  opacity: 0;
-  transition: all 0.3s ease-in-out;
-}
-#name-modal-overlay.open #name-modal,
-#delivery-modal-overlay.open #delivery-modal,
-#club-info-modal-overlay.open #club-info-modal {
-  transform: scale(1);
-  opacity: 1;
-}
-
-/* Esconde scrollbar no painel */
-.cart-items::-webkit-scrollbar {
-  width: 6px;
-}
-
-.cart-items::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.cart-items::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.cart-items::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-.cart-items {
-  scrollbar-width: thin;
-  scrollbar-color: #c1c1c1 #f1f1f1;
-}
-
-/* Animações para botões */
-.add-to-cart-btn:active, 
-.product-quantity-change:active, 
-.category-btn:active,
-.cart-quantity-change:active {
-  transform: scale(0.95);
-}
-
-/* Botões desabilitados */
-.product-quantity-change:disabled,
-.cart-quantity-change:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none !important;
-}
-
-/* Filtros de categoria roláveis em mobile */
-#category-filters {
-  display: flex;
-  overflow-x: auto;
-  white-space: nowrap;
-  -webkit-overflow-scrolling: touch;
-}
-#category-filters::-webkit-scrollbar {
-  display: none;
-}
-#category-filters {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-#category-filters .category-btn {
-  flex-shrink: 0;
-}
-
-/* ================================================================
-===== ESTILOS DOS BOTÕES DE CATEGORIA (VERSÃO ANTIGA/SÓLIDA) =====
-================================================================
-*/
+/* =======================================================================
+   ===== ESTILOS DOS BOTÕES DE CATEGORIA (DESIGN PROFISSIONAL) =====
+   ======================================================================= */
 .category-btn {
-  background-color: #16a34a; /* Fundo verde sólido por padrão */
+  /* Cor base unificada para todos os botões */
+  background-color: #16a34a;
   color: white;
-  border: 2px solid #16a34a;
-  transition: all 0.2s ease;
+  border: none; /* Remove a borda padrão para um visual mais limpo */
+  transition: all 0.25s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* Garante que o padding não mude a altura */
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .category-btn:hover {
-  background-color: #15803d; /* Verde mais escuro no hover */
-  border-color: #15803d;
+  /* Efeito de elevação sutil no hover */
+  background-color: #15803d;
   color: white;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .category-btn.active {
-  background-color: #14532d; /* Verde mais escuro ainda quando ativo */
-  border-color: #14532d;
+  /* Destaque claro para o botão ativo */
+  background-color: #14532d;
   color: white;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4); /* Sombra para destaque */
+  box-shadow: none;
   transform: translateY(0);
+  /* Linha inferior como indicador moderno de seleção */
+  border-bottom: 3px solid #34d399;
 }
 
 /* Contadores dentro dos botões de categoria */
-.category-btn span {
-  display: inline-flex;
-  align-items: center;
-}
-
-.category-btn .text-xs {
+.category-btn span .text-xs {
   font-size: 0.75rem;
   line-height: 1rem;
-  padding: 0.125rem 0.5rem;
+  padding: 0.125rem 0.6rem;
   border-radius: 9999px;
   margin-left: 0.75rem;
-  font-weight: 600;
-  /* Estilo para bom contraste com o fundo verde */
-  background-color: rgba(255, 255, 255, 0.2);
+  font-weight: 700;
   color: white;
+  /* Fundo sutilmente mais escuro para efeito de camada */
+  background-color: #15803d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
-/* ================================================================
-*/
 
-/* ===== CATEGORIA CLUB NATUBRAVA ESPECIAL (MANTIDO) ===== */
+/* Ajuste do contador no botão ativo para manter o contraste */
+.category-btn.active span .text-xs {
+  background-color: #166534;
+}
+/* ======================================================================= */
+
+/* ===== CATEGORIA CLUB NATUBRAVA ESPECIAL (MANTIDO E AJUSTADO) ===== */
 .club-category-btn {
   background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
-  border: 2px solid #059669 !important;
   color: white !important;
   font-weight: 600;
   box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
-  animation: pulse-club-category 3s infinite;
+  border: none !important;
+  border-bottom: 3px solid transparent !important; /* Reseta a borda */
 }
 
 .club-category-btn:hover {
   background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
-  border-color: #047857 !important;
-  transform: translateY(-2px) !important;
   box-shadow: 0 6px 12px rgba(5, 150, 105, 0.4);
 }
 
 .club-category-btn.active {
   background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important;
-  border-color: #064e3b !important;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(5, 150, 105, 0.5);
+  box-shadow: none !important;
+  /* Destaque especial para o Club ativo */
+  border-bottom: 3px solid #6ee7b7 !important;
 }
 
-@keyframes pulse-club-category {
-  0%, 100% { 
-    transform: scale(1);
-    box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
-  }
-  50% { 
-    transform: scale(1.02);
-    box-shadow: 0 6px 12px rgba(5, 150, 105, 0.4);
-  }
+/* Contador específico para o botão Club para garantir contraste */
+.club-category-btn span .text-xs {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
-/* ===== PADRONIZAÇÃO FORÇADA DE IMAGENS DOS PRODUTOS ===== */
-.product-card {
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 420px;
-}
+/* ===== PADRONIZAÇÃO DE IMAGENS E CARDS ===== */
+.product-card { transition: all 0.3s ease; display: flex; flex-direction: column; height: 100%; min-height: 420px; }
+.product-card:hover { transform: translateY(-2px); }
+.product-image-container { position: relative; width: 100%; height: 220px !important; min-height: 220px; max-height: 220px; overflow: hidden; background-color: #ffffff; border-radius: 0.5rem 0.5rem 0 0; display: flex; align-items: center; justify-content: center; border: 1px solid #f1f5f9; }
+.product-image { width: 100% !important; height: 100% !important; min-height: 220px !important; max-height: 220px !important; object-fit: contain !important; object-position: center !important; transition: transform 0.3s ease; background-color: #fff; display: block; padding: 8px; }
+.product-card:hover .product-image { transform: scale(1.03); }
+.product-image-error { display: flex !important; align-items: center; justify-content: center; width: 100%; height: 220px !important; min-height: 220px !important; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); color: #666; font-size: 0.9rem; text-align: center; padding: 1rem; border: 1px solid #dee2e6; }
+.product-card-content { flex: 1; display: flex; flex-direction: column; padding: 1rem; min-height: 200px; }
+.product-card-footer { margin-top: auto; }
 
-.product-card:hover {
-  transform: translateY(-2px);
-}
+/* ===== ESTILOS PARA PREÇOS CLUB ===== */
+.price-container { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.normal-price { font-size: 0.75rem; color: #6b7280; line-height: 1; }
+.original-price { text-decoration: line-through; font-weight: 500; }
+.club-price-container { display: flex; align-items: center; gap: 4px; }
+.club-badge { background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; font-size: 0.6rem; font-weight: 700; padding: 2px 6px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3); animation: pulse-club 2s infinite; }
+.club-price { font-size: 1rem; font-weight: 700; color: #059669; text-shadow: 0 1px 2px rgba(5, 150, 105, 0.1); }
+.club-info-icon { opacity: 0.7; transition: all 0.2s ease; cursor: pointer; }
+.club-info-icon:hover { opacity: 1; transform: scale(1.1); }
+@keyframes pulse-club { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.product-card { animation: fadeInUp 0.4s ease-out; }
 
-/* Container da imagem com proporção RIGOROSAMENTE fixa */
-.product-image-container {
-  position: relative;
-  width: 100%;
-  height: 220px !important;
-  min-height: 220px;
-  max-height: 220px;
-  overflow: hidden;
-  background-color: #ffffff;
-  border-radius: 0.5rem 0.5rem 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #f1f5f9;
-}
+/* ===== Melhorias Granel e Botões de Quantidade ===== */
+.product-card .product-quantity { min-width: 48px; font-weight: 600; color: #15803d; }
+.product-card .product-total-price { font-weight: 600; color: #15803d; }
+.product-quantity-change, .cart-quantity-change { transition: all 0.2s ease; min-width: 28px; min-height: 28px; display: flex; align-items: center; justify-content: center; }
+.product-quantity-change:hover:not(:disabled), .cart-quantity-change:hover:not(:disabled) { background-color: #15803d; color: white; transform: scale(1.1); }
+.product-quantity-change:disabled, .cart-quantity-change:disabled { background-color: #f3f4f6; color: #9ca3af; }
 
-/* Imagem do produto com fit para mostrar produto completo */
-.product-image {
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 220px !important;
-  max-height: 220px !important;
-  object-fit: contain !important;
-  object-position: center !important;
-  transition: transform 0.3s ease;
-  background-color: #fff;
-  display: block;
-  padding: 8px;
-}
-
-.product-card:hover .product-image {
-  transform: scale(1.03);
-}
-
-/* Fallback para imagens que falharam ao carregar */
-.product-image-error {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 220px !important;
-  min-height: 220px !important;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  color: #666;
-  font-size: 0.9rem;
-  text-align: center;
-  padding: 1rem;
-  border: 1px solid #dee2e6;
-}
-
-/* Conteúdo do card com altura fixa para uniformidade */
-.product-card-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-  min-height: 200px;
-}
-
-.product-card-footer {
-  margin-top: auto;
-}
-
-/* ===== ESTILOS PARA PREÇOS DO CLUB NATUBRAVA ===== */
-.price-container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-}
-
-.normal-price {
-  font-size: 0.75rem;
-  color: #6b7280;
-  line-height: 1;
-}
-
-.original-price {
-  text-decoration: line-through;
-  font-weight: 500;
-}
-
-.club-price-container {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.club-badge {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-  color: white;
-  font-size: 0.6rem;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
-  animation: pulse-club 2s infinite;
-}
-
-.club-price {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #059669;
-  text-shadow: 0 1px 2px rgba(5, 150, 105, 0.1);
-}
-
-.club-info-icon {
-  opacity: 0.7;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.club-info-icon:hover {
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-@keyframes pulse-club {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-/* Animação de entrada para produtos */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.product-card {
-  animation: fadeInUp 0.4s ease-out;
-}
-
-/* Melhorias específicas para produtos a granel */
-.product-card .product-quantity {
-  min-width: 48px;
-  font-weight: 600;
-  color: #15803d;
-}
-
-.product-card .product-total-price {
-  font-weight: 600;
-  color: #15803d;
-}
-
-/* Botões de quantidade melhorados */
-.product-quantity-change,
-.cart-quantity-change {
-  transition: all 0.2s ease;
-  min-width: 28px;
-  min-height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.product-quantity-change:hover:not(:disabled),
-.cart-quantity-change:hover:not(:disabled) {
-  background-color: #15803d;
-  color: white;
-  transform: scale(1.1);
-}
-
-.product-quantity-change:disabled,
-.cart-quantity-change:disabled {
-  background-color: #f3f4f6;
-  color: #9ca3af;
-}
-
-/* Responsividade personalizada */
+/* ===== RESPONSIVIDADE GERAL ===== */
 @media (max-width: 640px) {
-  .cart-panel {
-    max-width: 100%;
-  }
-  
-  .product-card {
-    margin-bottom: 1rem;
-    min-height: 400px;
-  }
-  
-  .product-image-container {
-    height: 180px !important;
-    min-height: 180px !important;
-    max-height: 180px !important;
-  }
-  
-  .product-image {
-    height: 180px !important;
-    min-height: 180px !important;
-    max-height: 180px !important;
-  }
-  
-  .product-image-error {
-    height: 180px !important;
-    min-height: 180px !important;
-  }
-  
-  .product-card-content {
-    min-height: 200px;
-  }
-  
-  .product-card h3 {
-    font-size: 1rem;
-    line-height: 1.2;
-  }
-  
-  .product-card .text-lg {
-    font-size: 1rem;
-  }
-  
-  .cart-items .text-sm {
-    font-size: 0.8rem;
-  }
-  
-  .product-quantity-change,
-  .cart-quantity-change {
-    min-width: 36px;
-    min-height: 36px;
-  }
-  
-  .product-card .product-quantity {
-    min-width: 56px;
-    font-size: 0.9rem;
-  }
-
-  .club-badge {
-    font-size: 0.55rem;
-    padding: 1px 4px;
-  }
-  
-  .club-price {
-    font-size: 0.9rem;
-  }
-  
-  .normal-price {
-    font-size: 0.7rem;
-  }
-
-  .club-category-btn {
-    padding: 8px 12px !important;
-    font-size: 0.8rem;
-  }
+  .cart-panel { max-width: 100%; }
+  .product-card { margin-bottom: 1rem; min-height: 400px; }
+  .product-image-container, .product-image, .product-image-error { height: 180px !important; min-height: 180px !important; max-height: 180px !important; }
+  .product-card-content { min-height: 200px; }
+  .product-card h3 { font-size: 1rem; line-height: 1.2; }
+  .product-card .text-lg { font-size: 1rem; }
+  .cart-items .text-sm { font-size: 0.8rem; }
+  .product-quantity-change, .cart-quantity-change { min-width: 36px; min-height: 36px; }
+  .product-card .product-quantity { min-width: 56px; font-size: 0.9rem; }
+  .club-badge { font-size: 0.55rem; padding: 1px 4px; }
+  .club-price { font-size: 0.9rem; }
+  .normal-price { font-size: 0.7rem; }
+  .club-category-btn { padding: 8px 12px !important; font-size: 0.8rem; }
 }
 
 @media (min-width: 1024px) {
-  .product-image-container {
-    height: 240px !important;
-    min-height: 240px !important;
-    max-height: 240px !important;
-  }
-  
-  .product-image {
-    height: 240px !important;
-    min-height: 240px !important;
-    max-height: 240px !important;
-  }
-  
-  .product-image-error {
-    height: 240px !important;
-    min-height: 240px !important;
-  }
-  
-  .product-card {
-    min-height: 470px;
-  }
+  .product-image-container, .product-image, .product-image-error { height: 240px !important; min-height: 240px !important; max-height: 240px !important; }
+  .product-card { min-height: 470px; }
 }
 
-/* Melhorias para notificações de carrinho */
-.cart-notification {
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
-  max-width: 300px;
-  word-wrap: break-word;
-  transition: all 0.3s ease;
-}
-
-/* Correções específicas para modais em dispositivos móveis */
+/* ===== Notificações, Modais e Otimizações Finais ===== */
+.cart-notification { box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); backdrop-filter: blur(10px); max-width: 300px; word-wrap: break-word; transition: all 0.3s ease; }
 @media (max-width: 640px) {
-  #name-modal, #delivery-modal, #club-info-modal {
-    margin: 1rem;
-    max-height: 90vh;
-    overflow-y: auto;
-  }
-  
-  #delivery-modal, #club-info-modal {
-    max-width: calc(100vw - 2rem);
-  }
-  
-  #name-modal {
-    max-width: calc(100vw - 2rem);
-    padding: 1.5rem;
-  }
-  
-  #name-modal h3 {
-    font-size: 1.25rem;
-  }
-  
-  #name-modal .text-sm {
-    font-size: 0.875rem;
-  }
-  
-  #name-modal .text-xs {
-    font-size: 0.75rem;
-  }
+  #name-modal, #delivery-modal, #club-info-modal { margin: 1rem; max-height: 90vh; overflow-y: auto; max-width: calc(100vw - 2rem); }
+  #name-modal { padding: 1.5rem; }
+  #name-modal h3 { font-size: 1.25rem; }
+  #name-modal .text-sm { font-size: 0.875rem; }
+  #name-modal .text-xs { font-size: 0.75rem; }
 }
-
-/* Melhorias para o modal de finalização */
-#name-modal .bg-green-100 {
-  background-color: #dcfce7;
-}
-
-#name-modal input:focus,
-#name-modal textarea:focus {
-  ring-width: 2px;
-  ring-color: #10b981;
-  border-color: #10b981;
-}
-
-#name-modal button {
-  font-weight: 500;
-}
-
-#name-modal button:focus {
-  outline: none;
-  ring-2: #10b981;
-  ring-offset-2;
-}
-
-/* ===== MENU MOBILE ===== */
-#mobile-menu {
-  animation: slideDown 0.3s ease-out;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-#mobile-menu button {
-  border: none;
-  background: none;
-  text-align: left;
-  transition: all 0.2s ease;
-}
-
-#mobile-menu button:hover,
-#mobile-menu a:hover {
-  background-color: #f0fdf4;
-  border-radius: 8px;
-  transform: translateX(4px);
-}
-
-#mobile-menu-button {
-  transition: transform 0.3s ease;
-}
-
-#mobile-menu-button:active {
-  transform: scale(0.95);
-}
-
-/* ===== MELHORIAS PARA IMAGENS NO CARRINHO ===== */
-.cart-items img {
-  width: 3rem;
-  height: 3rem;
-  object-fit: cover;
-  border-radius: 0.375rem;
-  background-color: #f8f9fa;
-}
-
-/* ===== DESTACAR PRODUTOS COM PREÇO CLUB ===== */
-.product-card:has(.club-badge) {
-  border: 2px solid #10b981;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
-}
-
-.product-card:has(.club-badge):hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
-}
-
-/* ===== OTIMIZAÇÕES ADICIONAIS ===== */
-.product-card,
-.cart-panel,
-.loading-spinner,
-.cart-notification {
-  will-change: transform;
-}
-
-/* Melhora a renderização de texto */
-h1, h2, h3, h4, h5, h6 {
-  text-rendering: optimizeLegibility;
-}
-
-/* Otimiza scroll em dispositivos móveis */
-@media (max-width: 768px) {
-  body {
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* Form elements */
-input, textarea, select {
-  font-size: 1rem;
-  line-height: 1.5rem;
-}
-
-input:focus, textarea:focus {
-  --tw-ring-offset-width: 0px;
-  --tw-ring-color: #22c55e;
-}
-
-button {
-  font-size: inherit;
-  font-family: inherit;
-  font-weight: inherit;
-  line-height: inherit;
-}
+#name-modal .bg-green-100 { background-color: #dcfce7; }
+#name-modal input:focus, #name-modal textarea:focus { ring-width: 2px; ring-color: #10b981; border-color: #10b981; }
+#name-modal button { font-weight: 500; }
+#name-modal button:focus { outline: none; ring-2: #10b981; ring-offset-2; }
+#mobile-menu { animation: slideDown 0.3s ease-out; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+#mobile-menu button { border: none; background: none; text-align: left; transition: all 0.2s ease; }
+#mobile-menu button:hover, #mobile-menu a:hover { background-color: #f0fdf4; border-radius: 8px; transform: translateX(4px); }
+#mobile-menu-button { transition: transform 0.3s ease; }
+#mobile-menu-button:active { transform: scale(0.95); }
+.cart-items img { width: 3rem; height: 3rem; object-fit: cover; border-radius: 0.375rem; background-color: #f8f9fa; }
+.product-card:has(.club-badge) { border: 2px solid #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15); }
+.product-card:has(.club-badge):hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25); }
+.product-card, .cart-panel, .loading-spinner, .cart-notification { will-change: transform; }
+h1, h2, h3, h4, h5, h6 { text-rendering: optimizeLegibility; }
+@media (max-width: 768px) { body { -webkit-overflow-scrolling: touch; } }
+input, textarea, select { font-size: 1rem; line-height: 1.5rem; }
+input:focus, textarea:focus { --tw-ring-offset-width: 0px; --tw-ring-color: #22c55e; }
+button { font-size: inherit; font-family: inherit; font-weight: inherit; line-height: inherit; }
