@@ -123,66 +123,59 @@ html { scroll-behavior: smooth; }
 /* Painel do Carrinho e Modais */
 .cart-panel { transition: transform 0.3s ease-in-out; transform: translateX(100%); backface-visibility: hidden; }
 .cart-panel.open { transform: translateX(0); }
-.cart-overlay, #name-modal-overlay, #delivery-modal-overlay, #club-info-modal-overlay { transition: opacity 0.3s ease-in-out; opacity: 0; pointer-events: none; }
-.cart-overlay.open, #name-modal-overlay.open, #delivery-modal-overlay.open, #club-info-modal-overlay.open { opacity: 1; pointer-events: auto; }
-#name-modal-overlay, #delivery-modal-overlay, #club-info-modal-overlay { display: none; }
-#name-modal-overlay.open, #delivery-modal-overlay.open, #club-info-modal-overlay.open { display: flex !important; }
-#name-modal, #delivery-modal, #club-info-modal { transform: scale(0.95); opacity: 0; transition: all 0.3s ease-in-out; }
-#name-modal-overlay.open #name-modal, #delivery-modal-overlay.open #delivery-modal, #club-info-modal-overlay.open #club-info-modal { transform: scale(1); opacity: 1; }
+.cart-overlay, #name-modal-overlay, #delivery-modal-overlay, #club-info-modal-overlay, #notify-modal-overlay { transition: opacity 0.3s ease-in-out; opacity: 0; pointer-events: none; }
+.cart-overlay.open, #name-modal-overlay.open, #delivery-modal-overlay.open, #club-info-modal-overlay.open, #notify-modal-overlay.open { opacity: 1; pointer-events: auto; }
+#name-modal-overlay, #delivery-modal-overlay, #club-info-modal-overlay, #notify-modal-overlay { display: none; }
+#name-modal-overlay.open, #delivery-modal-overlay.open, #club-info-modal-overlay.open, #notify-modal-overlay.open { display: flex !important; }
+#name-modal, #delivery-modal, #club-info-modal, #notify-modal { transform: scale(0.95); opacity: 0; transition: all 0.3s ease-in-out; }
+#name-modal-overlay.open #name-modal, #delivery-modal-overlay.open #delivery-modal, #club-info-modal-overlay.open #club-info-modal, #notify-modal-overlay.open #notify-modal { transform: scale(1); opacity: 1; }
 .cart-items { scrollbar-width: thin; scrollbar-color: #c1c1c1 #f1f1f1; }
 .cart-items::-webkit-scrollbar { width: 6px; }
 .cart-items::-webkit-scrollbar-track { background: #f1f1f1; }
 .cart-items::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
 .cart-items::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
-.add-to-cart-btn:active, .product-quantity-change:active, .category-btn:active, .cart-quantity-change:active { transform: scale(0.95); }
+.add-to-cart-btn:active, .product-quantity-change:active, .category-btn:active, .cart-quantity-change:active, .notify-me-btn:active { transform: scale(0.95); }
 .product-quantity-change:disabled, .cart-quantity-change:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
-/* Filtros de categoria roláveis (COM CORREÇÃO DE CORTE) */
-#category-filters {
-  display: flex;
-  overflow-x: auto;
-  white-space: nowrap;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  /* ADICIONADO: Espaçamento vertical para evitar que o botão seja cortado no hover */
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-#category-filters::-webkit-scrollbar {
-  display: none;
-}
-#category-filters .category-btn {
-  flex-shrink: 0;
-}
+/* Filtros de categoria roláveis */
+#category-filters { display: flex; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+#category-filters::-webkit-scrollbar { display: none; }
+#category-filters .category-btn { flex-shrink: 0; }
 
 /* =======================================================================
    ===== ESTILOS DOS BOTÕES DE CATEGORIA (DESIGN PROFISSIONAL) =====
    ======================================================================= */
 .category-btn {
+  /* Cor base unificada para todos os botões */
   background-color: #16a34a;
   color: white;
-  border: none;
+  border: none; /* Remove a borda padrão para um visual mais limpo */
   transition: all 0.25s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* Garante que o padding não mude a altura */
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .category-btn:hover {
-  background-color: #15803d; /* Tom mais escuro no hover */
+  /* Efeito de elevação sutil no hover */
+  background-color: #15803d;
   color: white;
-  transform: translateY(-2px); /* Efeito de elevação mantido */
-  box-shadow: 0 5px 10px rgba(0,0,0,0.15); /* Sombra mais pronunciada */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .category-btn.active {
-  background-color: #14532d; /* Verde mais escuro para o botão ativo */
+  /* Destaque claro para o botão ativo */
+  background-color: #14532d;
   color: white;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); /* Efeito de "pressionado" */
-  transform: translateY(0); /* Remove o efeito de elevação quando ativo */
+  box-shadow: none;
+  transform: translateY(0);
+  /* Linha inferior como indicador moderno de seleção */
+  border-bottom: 3px solid #34d399;
 }
 
 /* Contadores dentro dos botões de categoria */
@@ -193,19 +186,15 @@ html { scroll-behavior: smooth; }
   border-radius: 9999px;
   margin-left: 0.75rem;
   font-weight: 700;
-  color: #16a34a; /* Cor do texto do contador */
-  background-color: white; /* Fundo branco para destaque */
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  color: white;
+  /* Fundo sutilmente mais escuro para efeito de camada */
+  background-color: #15803d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Ajuste do contador no hover para manter o contraste */
-.category-btn:hover span .text-xs {
-  color: white;
-  background-color: #16a34a;
-}
+/* Ajuste do contador no botão ativo para manter o contraste */
 .category-btn.active span .text-xs {
   background-color: #166534;
-  color: white;
 }
 /* ======================================================================= */
 
@@ -216,6 +205,7 @@ html { scroll-behavior: smooth; }
   font-weight: 600;
   box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
   border: none !important;
+  border-bottom: 3px solid transparent !important; /* Reseta a borda */
 }
 
 .club-category-btn:hover {
@@ -225,15 +215,41 @@ html { scroll-behavior: smooth; }
 
 .club-category-btn.active {
   background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3) !important;
+  box-shadow: none !important;
+  /* Destaque especial para o Club ativo */
+  border-bottom: 3px solid #6ee7b7 !important;
 }
 
 /* Contador específico para o botão Club para garantir contraste */
-.club-category-btn span .text-xs,
-.club-category-btn.active span .text-xs {
-  background-color: rgba(255, 255, 255, 0.2) !important;
+.club-category-btn span .text-xs {
+  background-color: rgba(0, 0, 0, 0.2) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ===== NOVA CATEGORIA "FORA DE ESTOQUE" ===== */
+.out-of-stock-category-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
   color: white !important;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+  border: none !important;
+  border-bottom: 3px solid transparent !important;
+}
+
+.out-of-stock-category-btn:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%) !important;
+  box-shadow: 0 6px 12px rgba(220, 38, 38, 0.4);
+}
+
+.out-of-stock-category-btn.active {
+  background: linear-gradient(135deg, #991b1b 0%, #b91c1c 100%) !important;
+  box-shadow: none !important;
+  border-bottom: 3px solid #fca5a5 !important;
+}
+
+.out-of-stock-category-btn span .text-xs {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
 /* ===== PADRONIZAÇÃO DE IMAGENS E CARDS ===== */
@@ -245,6 +261,89 @@ html { scroll-behavior: smooth; }
 .product-image-error { display: flex !important; align-items: center; justify-content: center; width: 100%; height: 220px !important; min-height: 220px !important; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); color: #666; font-size: 0.9rem; text-align: center; padding: 1rem; border: 1px solid #dee2e6; }
 .product-card-content { flex: 1; display: flex; flex-direction: column; padding: 1rem; min-height: 200px; }
 .product-card-footer { margin-top: auto; }
+
+/* ===== NOVOS ESTILOS PARA PRODUTOS FORA DE ESTOQUE E ESTOQUE BAIXO ===== */
+.out-of-stock-card {
+  opacity: 0.75;
+  border: 2px solid #ef4444;
+  background-color: #fef2f2;
+}
+
+.out-of-stock-card:hover {
+  transform: none;
+  opacity: 0.8;
+}
+
+.low-stock-card {
+  border: 2px solid #f59e0b;
+  background-color: #fffbeb;
+}
+
+.low-stock-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25);
+}
+
+/* Imagem em escala de cinza para produtos fora de estoque */
+.product-image.grayscale {
+  filter: grayscale(100%);
+  opacity: 0.6;
+}
+
+/* ===== BADGES DE STATUS ===== */
+.status-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.out-of-stock-badge {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  color: white;
+  animation: pulse-out-of-stock 2s infinite;
+}
+
+.low-stock-badge {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  color: white;
+  animation: pulse-low-stock 2s infinite;
+}
+
+@keyframes pulse-out-of-stock {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes pulse-low-stock {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+/* ===== BOTÃO "AVISE-ME ASSIM QUE CHEGAR" ===== */
+.notify-me-btn {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+.notify-me-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(37, 99, 235, 0.4);
+}
+
+.notify-me-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
 
 /* ===== ESTILOS PARA PREÇOS CLUB ===== */
 .price-container { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
@@ -266,6 +365,17 @@ html { scroll-behavior: smooth; }
 .product-quantity-change:hover:not(:disabled), .cart-quantity-change:hover:not(:disabled) { background-color: #15803d; color: white; transform: scale(1.1); }
 .product-quantity-change:disabled, .cart-quantity-change:disabled { background-color: #f3f4f6; color: #9ca3af; }
 
+/* ===== MELHORIAS NO CARD PARA PRODUTOS CLUB ===== */
+.club-product-card {
+  border: 2px solid #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.club-product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+}
+
 /* ===== RESPONSIVIDADE GERAL ===== */
 @media (max-width: 640px) {
   .cart-panel { max-width: 100%; }
@@ -281,6 +391,8 @@ html { scroll-behavior: smooth; }
   .club-price { font-size: 0.9rem; }
   .normal-price { font-size: 0.7rem; }
   .club-category-btn { padding: 8px 12px !important; font-size: 0.8rem; }
+  .status-badge { font-size: 0.6rem; padding: 3px 6px; }
+  .notify-me-btn { font-size: 0.85rem; padding: 8px 12px; }
 }
 
 @media (min-width: 1024px) {
@@ -291,16 +403,18 @@ html { scroll-behavior: smooth; }
 /* ===== Notificações, Modais e Otimizações Finais ===== */
 .cart-notification { box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); backdrop-filter: blur(10px); max-width: 300px; word-wrap: break-word; transition: all 0.3s ease; }
 @media (max-width: 640px) {
-  #name-modal, #delivery-modal, #club-info-modal { margin: 1rem; max-height: 90vh; overflow-y: auto; max-width: calc(100vw - 2rem); }
-  #name-modal { padding: 1.5rem; }
-  #name-modal h3 { font-size: 1.25rem; }
-  #name-modal .text-sm { font-size: 0.875rem; }
-  #name-modal .text-xs { font-size: 0.75rem; }
+  #name-modal, #delivery-modal, #club-info-modal, #notify-modal { margin: 1rem; max-height: 90vh; overflow-y: auto; max-width: calc(100vw - 2rem); }
+  #name-modal, #notify-modal { padding: 1.5rem; }
+  #name-modal h3, #notify-modal h3 { font-size: 1.25rem; }
+  #name-modal .text-sm, #notify-modal .text-sm { font-size: 0.875rem; }
+  #name-modal .text-xs, #notify-modal .text-xs { font-size: 0.75rem; }
 }
-#name-modal .bg-green-100 { background-color: #dcfce7; }
-#name-modal input:focus, #name-modal textarea:focus { ring-width: 2px; ring-color: #10b981; border-color: #10b981; }
-#name-modal button { font-weight: 500; }
-#name-modal button:focus { outline: none; ring-2: #10b981; ring-offset-2; }
+#name-modal .bg-green-100, #notify-modal .bg-blue-50 { background-color: #dcfce7; }
+#name-modal input:focus, #name-modal textarea:focus, #notify-modal input:focus, #notify-modal textarea:focus { ring-width: 2px; ring-color: #10b981; border-color: #10b981; }
+#notify-modal input:focus, #notify-modal textarea:focus { ring-color: #3b82f6; border-color: #3b82f6; }
+#name-modal button, #notify-modal button { font-weight: 500; }
+#name-modal button:focus, #notify-modal button:focus { outline: none; ring-2: #10b981; ring-offset-2; }
+#notify-modal button:focus { ring-2: #3b82f6; }
 #mobile-menu { animation: slideDown 0.3s ease-out; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 #mobile-menu button { border: none; background: none; text-align: left; transition: all 0.2s ease; }
@@ -308,8 +422,6 @@ html { scroll-behavior: smooth; }
 #mobile-menu-button { transition: transform 0.3s ease; }
 #mobile-menu-button:active { transform: scale(0.95); }
 .cart-items img { width: 3rem; height: 3rem; object-fit: cover; border-radius: 0.375rem; background-color: #f8f9fa; }
-.product-card:has(.club-badge) { border: 2px solid #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15); }
-.product-card:has(.club-badge):hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25); }
 .product-card, .cart-panel, .loading-spinner, .cart-notification { will-change: transform; }
 h1, h2, h3, h4, h5, h6 { text-rendering: optimizeLegibility; }
 @media (max-width: 768px) { body { -webkit-overflow-scrolling: touch; } }
