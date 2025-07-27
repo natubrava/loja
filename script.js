@@ -117,8 +117,6 @@ let currentPage = 1;
 let totalPages = 1;
 let isLoading = false;
 let searchTimeout;
-let priceRange = { min: 0, max: 99999 };
-let currentPriceFilter = { min: 0, max: 99999 };
 
 // ===== ELEMENTOS DOM (CACHE) =====
 const elements = {
@@ -161,14 +159,8 @@ const elements = {
   mobileMenu: document.getElementById('mobile-menu'),
   clubInfoButtonMobile: document.getElementById('club-info-button-mobile'),
   deliveryInfoButtonMobile: document.getElementById('delivery-info-button-mobile'),
-  // Novos elementos para melhorias
   pagination: document.getElementById('pagination'),
   productCounter: document.getElementById('product-counter'),
-  priceFilter: document.getElementById('price-filter'),
-  minPriceInput: document.getElementById('min-price'),
-  maxPriceInput: document.getElementById('max-price'),
-  applyPriceFilter: document.getElementById('apply-price-filter'),
-  clearFilters: document.getElementById('clear-filters'),
   backToTop: document.getElementById('back-to-top'),
   searchResults: document.getElementById('search-results'),
 };
@@ -346,7 +338,6 @@ async function loadProducts() {
   if (cachedProducts) {
     products = cachedProducts;
     validateCartWithProducts();
-    calculatePriceRange();
     renderCategoryFilters();
     applyFilters();
     showSuccess();
@@ -465,7 +456,6 @@ async function loadProductsFromSheet(isBackground = false) {
     
     if (!isBackground) {
       validateCartWithProducts();
-      calculatePriceRange();
       renderCategoryFilters();
       applyFilters();
       showSuccess();
@@ -481,32 +471,6 @@ async function loadProductsFromSheet(isBackground = false) {
     }
   } finally {
     isLoading = false;
-  }
-}
-
-// ===== CALCULAR FAIXA DE PREÇOS =====
-function calculatePriceRange() {
-  if (products.length === 0) return;
-  
-  const prices = products.map(p => {
-    const price = p.clubPrice || p.price;
-    return p.isGranel ? price * 100 : price; // Preço base para granel é por 100g
-  });
-  
-  priceRange.min = Math.floor(Math.min(...prices));
-  priceRange.max = Math.ceil(Math.max(...prices));
-  
-  // Atualizar inputs de preço
-  if (elements.minPriceInput) {
-    elements.minPriceInput.placeholder = `Min: R$ ${priceRange.min}`;
-    elements.minPriceInput.min = priceRange.min;
-    elements.minPriceInput.max = priceRange.max;
-  }
-  
-  if (elements.maxPriceInput) {
-    elements.maxPriceInput.placeholder = `Max: R$ ${priceRange.max}`;
-    elements.maxPriceInput.min = priceRange.min;
-    elements.maxPriceInput.max = priceRange.max;
   }
 }
 
@@ -594,13 +558,7 @@ function applyFilters() {
       matchesSearch = searchTerms.every(term => productText.includes(term));
     }
     
-    // Filtro de preço
-    const productPrice = product.isGranel ? 
-      (product.clubPrice || product.price) * 100 : 
-      (product.clubPrice || product.price);
-    const inPriceRange = productPrice >= currentPriceFilter.min && productPrice <= currentPriceFilter.max;
-    
-    return inCategory && matchesSearch && inPriceRange;
+    return inCategory && matchesSearch;
   });
   
   // Ordenar produtos Club primeiro se estiver na categoria Club
@@ -815,7 +773,6 @@ function updateProductCounter() {
   
   elements.productCounter.innerHTML = `
     Mostrando <strong>${start}-${end}</strong> de <strong>${total}</strong> produtos
-    ${currentPriceFilter.min > 0 || currentPriceFilter.max < 99999 ? '<span class="text-green-600 ml-2">(Filtro de preço ativo)</span>' : ''}
   `;
 }
 
@@ -1088,37 +1045,6 @@ function setupEventListeners() {
   
   // Busca com debounce
   elements.searchBox.addEventListener('input', handleSearch);
-  
-  // Filtro de preço
-  if (elements.applyPriceFilter) {
-    elements.applyPriceFilter.addEventListener('click', () => {
-      const minVal = parseFloat(elements.minPriceInput.value) || priceRange.min;
-      const maxVal = parseFloat(elements.maxPriceInput.value) || priceRange.max;
-      
-      if (minVal <= maxVal) {
-        currentPriceFilter.min = minVal;
-        currentPriceFilter.max = maxVal;
-        applyFilters();
-        showNotification('Filtro de preço aplicado!');
-      } else {
-        showNotification('Preço mínimo deve ser menor que o máximo!');
-      }
-    });
-  }
-  
-  // Limpar filtros
-  if (elements.clearFilters) {
-    elements.clearFilters.addEventListener('click', () => {
-      currentPriceFilter.min = priceRange.min;
-      currentPriceFilter.max = priceRange.max;
-      elements.minPriceInput.value = '';
-      elements.maxPriceInput.value = '';
-      elements.searchBox.value = '';
-      currentFilter = 'Todos';
-      applyFilters();
-      showNotification('Filtros limpos!');
-    });
-  }
   
   // Scroll to top
   if (elements.backToTop) {
