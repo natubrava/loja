@@ -214,21 +214,6 @@ body {
   transform: translateY(0);
 }
 
-/* ===== MELHORIAS NAS CATEGORIAS COM CONTADORES ===== */
-.category-btn span {
-  display: inline-flex;
-  align-items: center;
-}
-
-.category-btn .text-xs {
-  font-size: 0.75rem;
-  line-height: 1rem;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  margin-left: 0.5rem;
-  font-weight: 600;
-}
-
 /* ===== DESTAQUE DE BUSCA (NOVO) ===== */
 mark {
   background-color: #fef08a;
@@ -399,23 +384,54 @@ html {
   flex-shrink: 0;
 }
 
-/* ===== ESTILOS DOS BOTÕES DE CATEGORIA (AJUSTADO) ===== */
+/* ================================================================
+===== ESTILOS DOS BOTÕES DE CATEGORIA (VERSÃO ANTIGA/SÓLIDA) =====
+================================================================
+*/
 .category-btn {
+  background-color: #16a34a; /* Fundo verde sólido por padrão */
+  color: white;
+  border: 2px solid #16a34a;
   transition: all 0.2s ease;
-  border: 2px solid #166534; /* Estilo padrão "vazado" */
-  color: #166534;
-  background-color: #ffffff; /* Fundo branco */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .category-btn:hover {
-  background-color: #166534; /* Fica sólido ao passar o mouse */
+  background-color: #15803d; /* Verde mais escuro no hover */
+  border-color: #15803d;
   color: white;
   transform: translateY(-1px);
 }
+
 .category-btn.active {
-  background-color: #16a34a; /* Cor sólida quando ativo */
-  border-color: #16a34a;
+  background-color: #14532d; /* Verde mais escuro ainda quando ativo */
+  border-color: #14532d;
+  color: white;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4); /* Sombra para destaque */
+  transform: translateY(0);
+}
+
+/* Contadores dentro dos botões de categoria */
+.category-btn span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.category-btn .text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  margin-left: 0.75rem;
+  font-weight: 600;
+  /* Estilo para bom contraste com o fundo verde */
+  background-color: rgba(255, 255, 255, 0.2);
   color: white;
 }
+/* ================================================================
+*/
 
 /* ===== CATEGORIA CLUB NATUBRAVA ESPECIAL (MANTIDO) ===== */
 .club-category-btn {
