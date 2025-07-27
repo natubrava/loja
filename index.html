@@ -89,7 +89,6 @@
     <section id="produtos" class="container mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-12" style="display: none;">
       <h2 class="text-2xl sm:text-3xl font-bold text-center text-green-800 mb-6">Nossos Produtos</h2>
       
-      <!-- BUSCA MELHORADA -->
       <div class="max-w-xl mx-auto mb-6">
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -100,44 +99,14 @@
         <div id="search-results" class="text-sm text-gray-600 mt-2 text-center"></div>
       </div>
 
-      <!-- FILTRO DE PREÇO (NOVO) -->
-      <div id="price-filter" class="max-w-xl mx-auto mb-6 bg-white p-4 rounded-lg shadow-sm">
-        <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-          <ion-icon name="funnel-outline" class="mr-2"></ion-icon>
-          Filtrar por Preço
-        </h3>
-        <div class="flex flex-col sm:flex-row gap-3 items-end">
-          <div class="flex-1">
-            <label class="text-xs text-gray-600 mb-1 block">Preço Mínimo</label>
-            <input type="number" id="min-price" placeholder="Min: R$ 0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm" step="0.01">
-          </div>
-          <div class="flex-1">
-            <label class="text-xs text-gray-600 mb-1 block">Preço Máximo</label>
-            <input type="number" id="max-price" placeholder="Max: R$ 999" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm" step="0.01">
-          </div>
-          <div class="flex gap-2">
-            <button id="apply-price-filter" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-300 text-sm font-medium">
-              Aplicar
-            </button>
-            <button id="clear-filters" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-300 text-sm font-medium">
-              Limpar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- CATEGORIAS COM CONTADORES -->
       <div id="category-filters" class="gap-2 mb-8 pb-4 min-h-[50px]"></div>
       
-      <!-- CONTADOR DE PRODUTOS (NOVO) -->
       <div id="product-counter" class="text-center text-sm text-gray-600 mb-4"></div>
       
-      <!-- LISTA DE PRODUTOS -->
       <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"></div>
       
       <p id="no-products-message" class="text-center text-gray-500 col-span-full" style="display: none;">Nenhum produto encontrado.</p>
       
-      <!-- PAGINAÇÃO (NOVO) -->
       <div id="pagination" class="flex justify-center items-center mt-8 gap-2" style="display: none;"></div>
     </section>
 
@@ -234,7 +203,6 @@
     </div>
   </footer>
 
-  <!-- BOTÃO VOLTAR AO TOPO (NOVO) -->
   <button id="back-to-top" class="back-to-top" aria-label="Voltar ao topo">
     <ion-icon name="chevron-up-outline"></ion-icon>
   </button>
