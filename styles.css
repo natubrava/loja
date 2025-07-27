@@ -115,6 +115,172 @@ body {
   font-display: swap;
 }
 
+/* ===== ESTILOS PARA PAGINAÇÃO (NOVO) ===== */
+#pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  min-width: 40px;
+  height: 40px;
+  padding: 0.5rem;
+  border: 2px solid #e5e7eb;
+  background-color: white;
+  color: #374151;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: #10b981;
+  color: white;
+  border-color: #10b981;
+  transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn.active {
+  background-color: #15803d;
+  color: white;
+  border-color: #15803d;
+}
+
+.pagination-dots {
+  padding: 0 0.5rem;
+  color: #9ca3af;
+}
+
+/* ===== ESTILOS PARA FILTRO DE PREÇO (NOVO) ===== */
+#price-filter {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+#price-filter input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+#price-filter input[type="number"]::-webkit-outer-spin-button,
+#price-filter input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ===== ESTILOS PARA CONTADOR DE PRODUTOS (NOVO) ===== */
+#product-counter {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-bottom: 1rem;
+}
+
+#product-counter strong {
+  color: #15803d;
+  font-weight: 600;
+}
+
+/* ===== ESTILOS PARA BOTÃO VOLTAR AO TOPO (NOVO) ===== */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 48px;
+  height: 48px;
+  background-color: #15803d;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 40;
+  box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
+}
+
+.back-to-top.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.back-to-top:hover {
+  background-color: #166534;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(21, 128, 61, 0.4);
+}
+
+.back-to-top:active {
+  transform: translateY(0);
+}
+
+/* ===== MELHORIAS NAS CATEGORIAS COM CONTADORES ===== */
+.category-btn span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.category-btn .text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  margin-left: 0.5rem;
+  font-weight: 600;
+}
+
+/* ===== DESTAQUE DE BUSCA (NOVO) ===== */
+mark {
+  background-color: #fef08a;
+  color: inherit;
+  padding: 0 0.125rem;
+  border-radius: 0.125rem;
+}
+
+/* ===== ESTILOS RESPONSIVOS PARA NOVOS ELEMENTOS ===== */
+@media (max-width: 640px) {
+  #price-filter {
+    padding: 0.75rem;
+  }
+  
+  .pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    font-size: 0.875rem;
+  }
+  
+  .back-to-top {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+  
+  #product-counter {
+    font-size: 0.75rem;
+  }
+}
+
 /* ===== CÓDIGO ORIGINAL DO STYLES.CSS ===== */
 
 /* Font */
