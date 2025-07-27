@@ -142,7 +142,7 @@ html { scroll-behavior: smooth; }
 #category-filters::-webkit-scrollbar { display: none; }
 #category-filters .category-btn { flex-shrink: 0; }
 
-/* ===== ESTILOS DOS BOTÕES DE CATEGORIA (SIMPLIFICADOS) ===== */
+/* ===== ESTILOS DOS BOTÕES DE CATEGORIA (CORRIGIDOS) ===== */
 .category-btn {
   background-color: #16a34a;
   color: white;
@@ -151,9 +151,11 @@ html { scroll-behavior: smooth; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  padding: 0.5rem 1rem; /* CORRIGIDO: Padding mais consistente */
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: visible; /* CORRIGIDO: Garante que não corte o conteúdo */
+  position: relative; /* CORRIGIDO: Para garantir o posicionamento correto */
+  z-index: 1; /* CORRIGIDO: Z-index base */
 }
 
 .category-btn:hover {
@@ -161,6 +163,7 @@ html { scroll-behavior: smooth; }
   color: white;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  z-index: 10; /* CORRIGIDO: Garante que fique por cima durante hover */
 }
 
 .category-btn.active {
@@ -169,6 +172,7 @@ html { scroll-behavior: smooth; }
   box-shadow: none;
   transform: translateY(0);
   border-bottom: 3px solid #34d399;
+  z-index: 5; /* CORRIGIDO: Z-index para botão ativo */
 }
 
 /* Contadores dentro dos botões de categoria */
@@ -196,46 +200,23 @@ html { scroll-behavior: smooth; }
   box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
   border: none !important;
   border-bottom: 3px solid transparent !important;
+  z-index: 1;
 }
 
 .club-category-btn:hover {
   background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
   box-shadow: 0 6px 12px rgba(5, 150, 105, 0.4);
+  z-index: 10; /* CORRIGIDO: Z-index para hover */
 }
 
 .club-category-btn.active {
   background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important;
   box-shadow: none !important;
   border-bottom: 3px solid #6ee7b7 !important;
+  z-index: 5;
 }
 
 .club-category-btn span .text-xs {
-  background-color: rgba(0, 0, 0, 0.2) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-}
-
-/* ===== CATEGORIA "FORA DE ESTOQUE" ===== */
-.out-of-stock-category-btn {
-  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
-  color: white !important;
-  font-weight: 600;
-  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
-  border: none !important;
-  border-bottom: 3px solid transparent !important;
-}
-
-.out-of-stock-category-btn:hover {
-  background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%) !important;
-  box-shadow: 0 6px 12px rgba(220, 38, 38, 0.4);
-}
-
-.out-of-stock-category-btn.active {
-  background: linear-gradient(135deg, #991b1b 0%, #b91c1c 100%) !important;
-  box-shadow: none !important;
-  border-bottom: 3px solid #fca5a5 !important;
-}
-
-.out-of-stock-category-btn span .text-xs {
   background-color: rgba(0, 0, 0, 0.2) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
