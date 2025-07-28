@@ -528,19 +528,17 @@ function renderCategoryFilters() {
     }
   });
   
+  // Separar categorias especiais
+  const regularCategories = displayCategories.filter(cat => cat !== 'GELADEIRA');
+  const hasGeladeira = displayCategories.includes('GELADEIRA');
+  
   let categories = [{ 
     name: 'Todos', 
     count: products.length
   }];
   
-  if (clubProducts.length > 0) {
-    categories.push({ 
-      name: '⭐ Club NatuBrava', 
-      count: clubProducts.length
-    });
-  }
-  
-  displayCategories.forEach(cat => {
+  // Adicionar categorias regulares primeiro
+  regularCategories.forEach(cat => {
     if (cat === 'VIAAROMA') {
       categories.push({ 
         name: cat, 
@@ -553,6 +551,22 @@ function renderCategoryFilters() {
       });
     }
   });
+  
+  // Adicionar GELADEIRA como penúltima (se existir)
+  if (hasGeladeira) {
+    categories.push({ 
+      name: 'GELADEIRA', 
+      count: categoryCount['GELADEIRA'] || 0
+    });
+  }
+  
+  // Adicionar Club NatuBrava como última categoria (se existir)
+  if (clubProducts.length > 0) {
+    categories.push({ 
+      name: '⭐ Club NatuBrava', 
+      count: clubProducts.length
+    });
+  }
   
   // REMOVIDO: Categoria "❌ Fora de Estoque"
   
