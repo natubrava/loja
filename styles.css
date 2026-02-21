@@ -1,0 +1,631 @@
+/* ===== ESTILOS PARA BOTÕES DO HEADER ===== */
+.header-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #15803d;
+  background-color: transparent;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-nav-btn:hover {
+  color: #ffffff;
+  background-color: #15803d;
+  border-color: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(21, 128, 61, 0.2);
+}
+
+.header-nav-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(21, 128, 61, 0.2);
+}
+
+.header-nav-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.2);
+}
+
+/* Efeito adicional para o botão Club NatuBrava */
+.header-nav-btn:has(ion-icon[name="star-outline"]) {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+  border-color: #10b981;
+  font-weight: 600;
+}
+
+.header-nav-btn:has(ion-icon[name="star-outline"]):hover {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #059669;
+  color: #ffffff;
+}
+
+/* Responsivo para telas menores */
+@media (min-width: 640px) {
+  .header-nav-btn {
+    font-size: 1rem;
+    padding: 10px 18px;
+  }
+}
+
+/* ===== CORREÇÕES HEADER ===== */
+header nav button {
+  background-color: transparent;
+}
+
+/* ===== ESTILOS PARA INSTAGRAM ===== */
+.instagram-btn {
+  background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+  box-shadow: 0 4px 12px rgba(131, 58, 180, 0.3);
+}
+
+.instagram-btn:hover {
+  background: linear-gradient(135deg, #6c2b8f 0%, #e01818 50%, #e09b39 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(131, 58, 180, 0.4);
+}
+
+/* ===== CORREÇÕES PARA LAYOUT SHIFT (CLS) ===== */
+header { min-height: 80px; }
+header nav { min-height: 60px; }
+header img[alt="Logo da NatuBrava"] { width: 160px !important; height: 60px !important; object-fit: contain; }
+.bg-gradient-to-r { min-height: 200px; }
+#sobre { min-height: 500px; }
+#category-filters { min-height: 50px; }
+.max-w-xl.mx-auto.mb-6 { min-height: 80px; }
+body { font-display: swap; }
+
+/* ===== ESTILOS PARA PAGINAÇÃO ===== */
+#pagination { display: flex; justify-content: center; align-items: center; gap: 0.5rem; margin-top: 2rem; flex-wrap: wrap; }
+.pagination-btn { min-width: 40px; height: 40px; padding: 0.5rem; border: 2px solid #e5e7eb; background-color: white; color: #374151; font-weight: 500; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; }
+.pagination-btn:hover:not(:disabled) { background-color: #10b981; color: white; border-color: #10b981; transform: translateY(-1px); }
+.pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pagination-btn.active { background-color: #15803d; color: white; border-color: #15803d; }
+.pagination-dots { padding: 0 0.5rem; color: #9ca3af; }
+
+/* ===== ESTILOS PARA CONTADOR DE PRODUTOS ===== */
+#product-counter { font-size: 0.875rem; color: #4b5563; margin-bottom: 1rem; }
+#product-counter strong { color: #15803d; font-weight: 600; }
+
+/* ===== ESTILOS PARA BOTÃO VOLTAR AO TOPO ===== */
+.back-to-top { position: fixed; bottom: 2rem; right: 2rem; width: 48px; height: 48px; background-color: #15803d; color: white; border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 40; box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3); }
+.back-to-top.show { opacity: 1; visibility: visible; }
+.back-to-top:hover { background-color: #166534; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(21, 128, 61, 0.4); }
+.back-to-top:active { transform: translateY(0); }
+
+/* ===== DESTAQUE DE BUSCA ===== */
+mark { background-color: #fef08a; color: inherit; padding: 0 0.125rem; border-radius: 0.125rem; }
+
+/* ===== ESTILOS RESPONSIVOS PARA NOVOS ELEMENTOS ===== */
+@media (max-width: 640px) {
+  .pagination-btn { min-width: 36px; height: 36px; font-size: 0.875rem; }
+  .back-to-top { bottom: 1.5rem; right: 1.5rem; width: 40px; height: 40px; font-size: 1.25rem; }
+  #product-counter { font-size: 0.75rem; }
+}
+
+/* ===== CÓDIGO GERAL ===== */
+body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+html { scroll-behavior: smooth; }
+
+/* Loading Spinner */
+.loading-spinner { border: 4px solid #f3f3f3; border-top: 4px solid #15803d; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; transform: translateZ(0); }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes cart-bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+.cart-bounce-animation { animation: cart-bounce 0.4s ease-in-out; }
+
+/* Painel do Carrinho e Modais */
+.cart-panel { transition: transform 0.3s ease-in-out; transform: translateX(100%); backface-visibility: hidden; }
+.cart-panel.open { transform: translateX(0); }
+.cart-overlay, #name-modal-overlay, #delivery-modal-overlay, #club-info-modal-overlay, #notify-modal-overlay, #product-details-modal-overlay { transition: opacity 0.3s ease-in-out; opacity: 0; pointer-events: none; }
+.cart-overlay.open, #name-modal-overlay.open, #delivery-modal-overlay.open, #club-info-modal-overlay.open, #notify-modal-overlay.open, #product-details-modal-overlay.open { opacity: 1; pointer-events: auto; }
+#name-modal-overlay, #delivery-modal-overlay, #club-info-modal-overlay, #notify-modal-overlay, #product-details-modal-overlay { display: none; }
+#name-modal-overlay.open, #delivery-modal-overlay.open, #club-info-modal-overlay.open, #notify-modal-overlay.open, #product-details-modal-overlay.open { display: flex !important; }
+#name-modal, #delivery-modal, #club-info-modal, #notify-modal, #product-details-modal { transform: scale(0.95); opacity: 0; transition: all 0.3s ease-in-out; }
+#name-modal-overlay.open #name-modal, #delivery-modal-overlay.open #delivery-modal, #club-info-modal-overlay.open #club-info-modal, #notify-modal-overlay.open #notify-modal, #product-details-modal-overlay.open #product-details-modal { transform: scale(1); opacity: 1; }
+.cart-items { scrollbar-width: thin; scrollbar-color: #c1c1c1 #f1f1f1; }
+.cart-items::-webkit-scrollbar { width: 6px; }
+.cart-items::-webkit-scrollbar-track { background: #f1f1f1; }
+.cart-items::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+.cart-items::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+.add-to-cart-btn:active, .product-quantity-change:active, .category-btn:active, .cart-quantity-change:active, .notify-me-btn:active, .info-btn:active { transform: scale(0.95); }
+.product-quantity-change:disabled, .cart-quantity-change:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+/* Filtros de categoria roláveis */
+#category-filters { display: flex; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+#category-filters::-webkit-scrollbar { display: none; }
+#category-filters .category-btn { flex-shrink: 0; }
+
+/* ===== ESTILOS DOS BOTÕES DE CATEGORIA ===== */
+.category-btn {
+  background-color: #16a34a;
+  color: white;
+  border: none;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+}
+
+.category-btn:hover {
+  background-color: #15803d;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  z-index: 10;
+}
+
+.category-btn.active {
+  background-color: #14532d;
+  color: white;
+  box-shadow: none;
+  transform: translateY(0);
+  border-bottom: 3px solid #34d399;
+  z-index: 5;
+}
+
+/* Contadores dentro dos botões de categoria */
+.category-btn span .text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  padding: 0.125rem 0.6rem;
+  border-radius: 9999px;
+  margin-left: 0.75rem;
+  font-weight: 700;
+  color: white;
+  background-color: #15803d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.category-btn.active span .text-xs {
+  background-color: #166534;
+}
+
+/* ===== CATEGORIA CLUB NATUBRAVA ESPECIAL ===== */
+.club-category-btn {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  color: white !important;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+  border: none !important;
+  border-bottom: 3px solid transparent !important;
+  z-index: 1;
+}
+
+.club-category-btn:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
+  box-shadow: 0 6px 12px rgba(5, 150, 105, 0.4);
+  z-index: 10;
+}
+
+.club-category-btn.active {
+  background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important;
+  box-shadow: none !important;
+  border-bottom: 3px solid #6ee7b7 !important;
+  z-index: 5;
+}
+
+.club-category-btn span .text-xs {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ===== PADRONIZAÇÃO DE IMAGENS E CARDS ===== */
+/* Card mais compacto e leve */
+.product-card { 
+  transition: all 0.3s ease; 
+  display: flex; 
+  flex-direction: column; 
+  height: 100%; 
+  min-height: 340px; 
+  border: 1px solid #f0f0f0;
+}
+.product-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+
+/* Container da Imagem Ajustado */
+.product-image-container { 
+  position: relative; 
+  width: 100%; 
+  height: 150px !important; 
+  min-height: 150px; 
+  max-height: 150px; 
+  overflow: hidden; 
+  background-color: #ffffff; 
+  border-bottom: 1px solid #f3f4f6;
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+}
+
+/* Cursor pointer apenas se tiver detalhes */
+.product-image-container.has-details-cursor {
+  cursor: pointer;
+}
+
+.product-image { 
+  width: 100% !important; 
+  height: 100% !important; 
+  object-fit: contain !important; 
+  padding: 10px; 
+  transition: transform 0.3s ease; 
+}
+
+.product-card:hover .product-image { transform: scale(1.05); }
+
+.product-image-error { 
+  display: flex !important; 
+  align-items: center; 
+  justify-content: center; 
+  width: 100%; 
+  height: 100%;
+  background: #f9fafb;
+  color: #9ca3af; 
+  font-size: 0.8rem; 
+  text-align: center; 
+  padding: 1rem; 
+}
+
+/* Conteúdo do Card mais compacto */
+.product-card-content { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  padding: 0.85rem; 
+}
+
+.product-card-footer { margin-top: auto; }
+
+/* ===== BOTÃO "VER DETALHES" NOVO (FIXO SUPERIOR DIREITO) ===== */
+.view-details-pill {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #15803d;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #dcfce7;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+}
+
+.view-details-pill:hover {
+  background-color: #15803d;
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.view-details-pill ion-icon {
+  font-size: 0.9rem;
+}
+
+/* ===== TAGS DO MODAL (NOVA VERSÃO COM ÍCONES) ===== */
+.modal-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  gap: 6px;
+  border: 1px solid transparent;
+  margin-bottom: 4px; /* Garante espaço na quebra */
+  white-space: nowrap; /* Evita quebra dentro da tag */
+}
+
+.modal-tag-pill ion-icon { font-size: 1.1rem; }
+
+/* TAGS LEGADO (MANTIDO P/ COMPATIBILIDADE SE NECESSÁRIO) */
+.product-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+}
+
+/* Cores das Tags/Badges */
+.tag-gluten, .diet-pill-gluten { background-color: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; border-color: #fed7aa; } 
+.tag-vegan, .diet-pill-vegan { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; border-color: #bbf7d0; } 
+.tag-lactose, .diet-pill-lactose { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-color: #fde68a; } 
+.tag-default, .diet-pill-default { background-color: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; border-color: #e5e7eb; } 
+.tag-sugar, .diet-pill-sugar { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; border-color: #bfdbfe; } 
+.tag-preservative, .diet-pill-preservative { background-color: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; border-color: #e5e7eb; } 
+
+
+/* ===== BADGES DE DIETA NO CARD (Compactas) ===== */
+.diet-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 4px 0 8px;
+}
+
+.diet-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  border: 1px solid rgba(0,0,0,0.06);
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.diet-pill ion-icon { font-size: 11px; }
+
+/* ===== NOVOS ESTILOS PARA BOTÕES DE QUANTIDADE (FIXOS) ===== */
+.qty-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 8px; /* Formato levemente quadrado para visual mais moderno/profissional */
+  background-color: #ffffff;
+  border: 1px solid #d1d5db; /* Borda cinza suave */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  color: #4b5563; /* Ícone em cinza elegante */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* Sombra bem leve para dar profundidade */
+}
+
+.qty-btn ion-icon {
+  font-size: 1.1rem; /* Tamanho do ícone um pouco mais nítido */
+  pointer-events: none;
+}
+
+.qty-btn:hover:not(:disabled) {
+  background-color: #f0fdf4; /* Fundo verde clarinho no hover */
+  border-color: #22c55e; /* Borda verde com a identidade visual da loja */
+  color: #15803d; /* Ícone fica verde forte */
+  box-shadow: 0 2px 4px rgba(34, 197, 94, 0.15); /* Sombra em tom verde no hover */
+}
+
+.qty-btn:active:not(:disabled) {
+  transform: scale(0.92) !important; /* Feedback visual claro no clique */
+  background-color: #dcfce7;
+}
+
+.qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
+  color: #9ca3af;
+  box-shadow: none;
+}
+
+/* ===== CORREÇÃO DO MODAL DE DETALHES ===== */
+#product-details-modal {
+  max-width: 800px !important; /* Limita a largura para não explodir no desktop */
+  width: 90%;
+  max-height: 90vh; /* Garante que caiba na tela */
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+#product-details-modal .product-details-layout {
+  display: flex;
+  flex-direction: row; /* Desktop: Lado a Lado */
+  min-height: 0; /* Importante para o scroll funcionar */
+}
+
+/* Coluna da Imagem */
+#product-details-modal .product-details-image-col {
+  width: 45%;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  border-right: 1px solid #f3f4f6;
+  min-height: 350px;
+}
+
+#product-details-modal .product-details-image {
+  max-height: 300px !important;
+  width: auto !important;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/* Coluna das Informações */
+#product-details-modal .product-details-info-col {
+  width: 55%;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 80vh; /* Scroll interno se o conteúdo for longo */
+}
+
+/* Botão fechar modal */
+#close-details-modal-button {
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  position: absolute !important;
+  top: 15px !important;
+  right: 15px !important;
+  z-index: 100 !important;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#close-details-modal-button:hover {
+  background-color: #e5e7eb !important;
+  color: #ef4444 !important;
+}
+
+#detail-tags-container {
+  display: flex;
+  flex-wrap: wrap !important;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+/* === MODAL MOBILE OTIMIZADO === */
+@media (max-width: 768px) {
+  #product-details-modal .product-details-layout {
+    flex-direction: column !important;
+    overflow-y: auto;
+    max-height: 85vh;
+  }
+  
+  #product-details-modal .product-details-image-col {
+    width: 100% !important;
+    min-height: auto !important;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #f3f4f6;
+    padding: 1rem;
+  }
+  
+  #product-details-modal .product-details-image {
+    max-height: 200px !important;
+  }
+  
+  #product-details-modal .product-details-info-col {
+    width: 100% !important;
+    padding: 1.5rem;
+    overflow-y: visible; /* Scroll vai pro modal inteiro no mobile */
+  }
+}
+
+/* ===== ESTILOS PARA PRODUTOS FORA DE ESTOQUE E ESTOQUE BAIXO ===== */
+.out-of-stock-card {
+  opacity: 0.8;
+  border: 1px solid #ef4444;
+  background-color: #fffafa;
+}
+.low-stock-card {
+  border: 1px solid #f59e0b;
+  background-color: #fffdf5;
+}
+
+.product-image.grayscale {
+  filter: grayscale(100%);
+  opacity: 0.7;
+}
+
+/* ===== BADGES DE STATUS ===== */
+.status-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.out-of-stock-badge { background: #ef4444; color: white; }
+.low-stock-badge { background: #f59e0b; color: white; }
+
+/* ===== CORREÇÃO CLUB NATUBRAVA (ALINHAMENTO) ===== */
+.club-product-card {
+  border: 2px solid #10b981 !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+}
+
+.price-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Força alinhamento à esquerda */
+  justify-content: center;
+  gap: 2px;
+  margin-bottom: 4px;
+  min-height: 44px; /* Garante altura mínima para alinhar grid */
+}
+
+/* Preço "De" */
+.normal-price { 
+  font-size: 0.75rem; 
+  color: #6b7280; 
+  margin-bottom: -2px; /* Aproxima do preço club */
+}
+
+.original-price { text-decoration: line-through; }
+
+/* Container do Preço Club + Badge */
+.club-price-container { 
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+  flex-wrap: wrap;
+}
+
+.club-price { 
+  font-size: 1.1rem; 
+  font-weight: 800; 
+  color: #059669; 
+  line-height: 1.1;
+}
+
+.club-badge { 
+  background-color: #059669; 
+  color: white; 
+  font-size: 0.6rem; 
+  font-weight: 700; 
+  padding: 1px 5px; 
+  border-radius: 4px; 
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== Botão Avise-me ===== */
+.notify-me-btn {
+  background: #3b82f6;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+}
+
+/* ===== RESPONSIVIDADE GERAL ===== */
+@media (max-width: 640px) {
+  .product-card { min-height: 300px; } /* Menor no mobile */
+  .product-image-container { height: 130px !important; min-height: 130px; }
+  .product-card h3 { font-size: 0.9rem; line-height: 1.3; }
+  .product-quantity-change, .cart-quantity-change { min-width: 32px; min-height: 32px; }
+  .club-price { font-size: 1rem; }
+}
+
+/* Animações e Utilitários */
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.product-card { animation: fadeInUp 0.4s ease-out; }
