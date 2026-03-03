@@ -299,30 +299,54 @@ function getProductStatus(product) {
   }
 }
 
-// ===== HELPER PARA RENDERIZAR TAGS (VERSÃO ANTIGA - CARDS) =====
-function renderTags(tagsString) {
-  if (!tagsString) return '';
+// ===== HELPER PARA RENDERIZAR TAGS =====
+// Removemos a função getDietBadges antiga e criamos uma única 
+// função dinâmica que lê qualquer tag que vier da planilha.
 
+function renderDietBadges(tagsString) {
+  if (!tagsString) return '';
   const tags = tagsString.split(',').map(t => t.trim()).filter(t => t.length > 0);
 
-  return tags.map(tag => {
-    let colorClass = 'tag-default';
-    const lowerTag = normalizeText(tag);
+  if (tags.length === 0) return '';
 
+  const badgesHTML = tags.map(tag => {
+    const lowerTag = normalizeText(tag);
+    
+    // Configuração Padrão para qualquer tag nova (ex: "Proteína 18g", "Low Carb")
+    let icon = 'pricetag-outline'; 
+    let cssClass = 'diet-pill-default';
+
+    // Mapeamento de Tags Específicas
     if (lowerTag.includes('sem gluten') || lowerTag.includes('gluten free')) {
-      colorClass = 'tag-gluten';
+      icon = 'ban-outline';
+      cssClass = 'diet-pill-gluten';
     } else if (lowerTag.includes('vegano') || lowerTag.includes('vegana') || lowerTag.includes('vegan')) {
-      colorClass = 'tag-vegan';
+      icon = 'leaf-outline';
+      cssClass = 'diet-pill-vegan';
     } else if (lowerTag.includes('sem acucar') || lowerTag.includes('zero acucar')) {
-      colorClass = 'tag-sugar';
+      icon = 'cube-outline';
+      cssClass = 'diet-pill-sugar';
     } else if (lowerTag.includes('sem lactose') || lowerTag.includes('sem leite') || lowerTag.includes('lactose free')) {
-      colorClass = 'tag-lactose';
+      icon = 'water-outline';
+      cssClass = 'diet-pill-lactose';
     } else if (lowerTag.includes('sem conservante')) {
-      colorClass = 'tag-preservative';
+      icon = 'shield-checkmark-outline';
+      cssClass = 'diet-pill-preservative';
     }
 
-    return `<span class="product-tag ${colorClass}">${tag}</span>`;
+    return `
+      <span class="diet-pill ${cssClass}" title="${tag}">
+        <ion-icon name="${icon}"></ion-icon>
+        <span class="diet-pill-text">${tag}</span>
+      </span>
+    `;
   }).join('');
+
+  return `
+    <div class="diet-badges">
+      ${badgesHTML}
+    </div>
+  `;
 }
 
 // ===== NOVA FUNÇÃO: RENDERIZAR TAGS COM ÍCONES NO MODAL =====
@@ -359,51 +383,6 @@ function renderModalTagsWithIcons(tagsString) {
       </span>
     `;
   }).join('');
-}
-
-// ===== BADGES DE DIETA (CARDS) =====
-function getDietBadges(tagsString) {
-  if (!tagsString) return [];
-  const t = normalizeText(tagsString);
-
-  const badges = [];
-  const add = (key, label, icon, cssClass) => {
-    if (!badges.some(b => b.key === key)) badges.push({ key, label, icon, cssClass });
-  };
-
-  if (t.includes('sem gluten') || t.includes('gluten free')) {
-    add('gluten', 'S/ Glúten', 'ban-outline', 'diet-pill-gluten');
-  }
-  if (t.includes('vegano') || t.includes('vegana') || t.includes('vegan')) {
-    add('vegan', 'Vegano', 'leaf-outline', 'diet-pill-vegan');
-  }
-  if (t.includes('sem acucar') || t.includes('zero acucar')) {
-    add('sugar', 'Zero Açúcar', 'cube-outline', 'diet-pill-sugar');
-  }
-  if (t.includes('sem lactose') || t.includes('sem leite') || t.includes('lactose free')) {
-    add('lactose', 'S/ Lactose', 'water-outline', 'diet-pill-lactose');
-  }
-  if (t.includes('sem conservante')) {
-    add('preservative', 'S/ Conser.', 'shield-checkmark-outline', 'diet-pill-preservative');
-  }
-
-  return badges;
-}
-
-function renderDietBadges(tagsString) {
-  const badges = getDietBadges(tagsString);
-  if (badges.length === 0) return '';
-
-  return `
-    <div class="diet-badges">
-      ${badges.map(b => `
-        <span class="diet-pill ${b.cssClass}" title="${b.label}">
-          <ion-icon name="${b.icon}"></ion-icon>
-          <span class="diet-pill-text">${b.label}</span>
-        </span>
-      `).join('')}
-    </div>
-  `;
 }
 
 
@@ -1248,7 +1227,6 @@ function openProductDetails(productId) {
   }
   elements.detailPriceContainer.innerHTML = priceHTML;
 
-  // AQUI: Usar a nova função que renderiza com ÍCONES
   elements.detailTagsContainer.innerHTML = renderModalTagsWithIcons(product.tags);
 
   if (product.ingredients && product.ingredients.trim() !== '') {
